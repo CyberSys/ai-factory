@@ -1,0 +1,209 @@
+# AI Factory - Developer Guide
+
+> This file is for AI agents working on this codebase. Read this first when starting a new session.
+
+## What is this project?
+
+**AI Factory** is an npm package + skill system that automates Claude Code context setup for projects. It provides:
+
+1. **CLI tool** (`ai-factory init/update`) - installs skills and configures MCP
+2. **Built-in skills** - workflow commands for spec-driven development
+3. **Spec-driven workflow** - structured approach: plan → implement → commit
+
+## Project Structure
+
+```
+ai-factory/
+├── src/                    # CLI source (TypeScript)
+│   ├── cli/
+│   │   ├── commands/       # init.ts, update.ts
+│   │   └── wizard/         # prompts.ts, detector.ts
+│   ├── core/               # installer.ts, config.ts, mcp.ts
+│   └── utils/              # fs.ts
+├── skills/                 # Built-in skills (copied to user projects)
+│   ├── ai-factory/         # Main setup skill
+│   ├── feature/            # Start feature (branch + plan)
+│   ├── task/               # Create implementation plan
+│   ├── implement/          # Execute plan tasks
+│   ├── fix/                # Quick bug fixes (no plans)
+│   ├── commit/             # Conventional commits
+│   ├── review/             # Code review
+│   ├── deploy/             # Deployment helper
+│   ├── skill-generator/    # Generate new skills
+│   ├── best-practices/     # Code quality guidelines
+│   ├── architecture/       # Architecture patterns
+│   ├── security-checklist/ # Security audit
+│   └── _templates/         # Stack-specific templates
+├── dist/                   # Compiled JS
+└── bin/                    # CLI entry point
+```
+
+## Key Concepts
+
+### Skills Location
+- **Package skills**: `skills/` - source of truth, copied during install
+- **User skills**: `.claude/skills/` (Claude Code) or `.ai/skills/` (universal)
+
+### Working Directory
+All AI Factory files in user projects go to `.ai-factory/`:
+- `.ai-factory/DESCRIPTION.md` - project specification
+- `.ai-factory/PLAN.md` - task plan (from /task)
+- `.ai-factory/feature-*.md` - feature plans (from /feature)
+
+### Skill Naming
+All skills use `ai-factory.` namespace prefix:
+- `/ai-factory` - main setup
+- `/ai-factory.feature`
+- `/ai-factory.task`
+- `/ai-factory.implement`
+- `/ai-factory.commit`
+- etc.
+
+## Workflow Logic
+
+```
+/ai-factory (3 scenarios)
+    ↓
+Check: has arguments? has project files?
+    ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Mode 1: Existing project (no args + has package.json, etc.) │
+│   → Analyze project → Generate DESCRIPTION.md → Setup       │
+├─────────────────────────────────────────────────────────────┤
+│ Mode 2: New project with description                        │
+│   → Interactive stack selection → DESCRIPTION.md → Setup    │
+├─────────────────────────────────────────────────────────────┤
+│ Mode 3: Empty project (no args + no config files)           │
+│   → Ask "What are you building?" → Stack selection → Setup  │
+└─────────────────────────────────────────────────────────────┘
+    ↓
+STOP (does NOT implement)
+
+/ai-factory.feature <description>
+    ↓
+Reads .ai-factory/DESCRIPTION.md for context
+    ↓
+Creates git branch (feature/xxx)
+    ↓
+Asks: tests? logging level?
+    ↓
+Calls /ai-factory.task → creates .ai-factory/feature-xxx.md
+
+/ai-factory.task <description>
+    ↓
+Reads .ai-factory/DESCRIPTION.md for context
+    ↓
+Explores codebase
+    ↓
+Creates tasks with TaskCreate
+    ↓
+Saves plan to .ai-factory/PLAN.md (direct) or .ai-factory/feature-xxx.md (from feature)
+    ↓
+For 5+ tasks: includes commit checkpoints
+
+/ai-factory.implement
+    ↓
+Reads .ai-factory/DESCRIPTION.md for context
+    ↓
+Finds plan file (PLAN.md or branch-named)
+    ↓
+Executes tasks one by one
+    ↓
+Updates DESCRIPTION.md if stack changes
+    ↓
+Prompts for commits at checkpoints
+    ↓
+Offers to delete PLAN.md when done (keeps feature-*.md)
+
+/ai-factory.fix <bug description>
+    ↓
+Reads .ai-factory/DESCRIPTION.md for context
+    ↓
+Investigates codebase (Glob, Grep, Read)
+    ↓
+Implements fix WITH logging ([FIX] prefix)
+    ↓
+Suggests test coverage for the bug
+    ↓
+NO plans, NO reports
+```
+
+## Skill Frontmatter Patterns
+
+### Action skills (user-only)
+```yaml
+disable-model-invocation: true  # User must invoke explicitly
+allowed-tools: Bash(git *) Write Edit
+```
+Used by: feature, task, implement, commit, deploy
+
+### Reference skills (model + user)
+```yaml
+# No disable-model-invocation - Claude can use automatically
+allowed-tools: Read Glob Grep
+```
+Used by: best-practices, architecture, security-checklist, review
+
+## Development Commands
+
+```bash
+# Build TypeScript
+npm run build
+
+# Link globally for testing
+npm link
+
+# Test in a project
+cd /some/project
+ai-factory init
+
+# Update skills after changes
+ai-factory update
+```
+
+## Key Files to Know
+
+| File | Purpose |
+|------|---------|
+| `src/cli/wizard/prompts.ts` | Interactive CLI questions |
+| `src/cli/wizard/detector.ts` | Stack detection logic |
+| `src/core/installer.ts` | Copies skills to project |
+| `src/core/mcp.ts` | MCP server configuration |
+| `skills/*/SKILL.md` | Skill instructions |
+
+## Important Rules
+
+1. **Skills don't implement** - `/ai-factory` only sets up context
+2. **DESCRIPTION.md is source of truth** - all skills read it for context
+3. **Plans go to .ai-factory/** - keeps project root clean
+4. **Search skills.sh first** - don't reinvent existing skills
+5. **Verbose logging required** - all implementations must have configurable logging
+6. **No tests unless asked** - respect user's testing preference
+7. **Commit checkpoints** - for plans with 5+ tasks
+
+## Common Changes
+
+### Adding a new skill
+1. Create `skills/new-skill/SKILL.md`
+2. Add to `getAvailableSkills()` if needed
+3. Rebuild: `npm run build`
+
+### Modifying workflow
+1. Edit relevant skill in `skills/`
+2. Update AGENTS.md if logic changes
+3. Rebuild and test with `ai-factory update`
+
+### Changing CLI prompts
+1. Edit `src/cli/wizard/prompts.ts`
+2. Update types in `src/core/config.ts` if needed
+3. Rebuild: `npm run build`
+
+## Testing Checklist
+
+After changes, verify:
+- [ ] `ai-factory init` works in empty directory
+- [ ] `ai-factory update` updates existing skills
+- [ ] `/ai-factory` in Claude Code shows interactive stack selection
+- [ ] `/ai-factory.feature` creates branch + plan file
+- [ ] `/ai-factory.implement` finds and executes plan
+- [ ] Skills read `.ai-factory/DESCRIPTION.md`
