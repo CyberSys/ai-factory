@@ -96,6 +96,17 @@ Then open Claude Code and start working:
                                         │                                   │
                                         ▼                                   │
                              ┌─────────────────────┐                        │
+                             │                     │                        │
+                             │ /ai-factory.improve │                        │
+                             │    (optional)        │                        │
+                             │                     │                        │
+                             │ Refine plan with    │                        │
+                             │ deeper analysis     │                        │
+                             │                     │                        │
+                             └──────────┬──────────┘                        │
+                                        │                                   │
+                                        ▼                                   │
+                             ┌─────────────────────┐                        │
                              │                     │◀── reads patches ──────┘
                              │ /ai-factory.implement│
                              │                     │ ──── error? ──▶ /fix
@@ -136,6 +147,7 @@ Then open Claude Code and start working:
 |---------|----------|-----------------|---------------|
 | `/ai-factory.task` | Small tasks, quick fixes, experiments | No | `.ai-factory/PLAN.md` |
 | `/ai-factory.feature` | Full features, stories, epics | Yes | `.ai-factory/features/<branch>.md` |
+| `/ai-factory.improve` | Refine plan before implementation | No | No (improves existing) |
 | `/ai-factory.fix` | Bug fixes, errors, hotfixes | No | No (direct fix) |
 
 ### Why Spec-Driven?
@@ -183,6 +195,20 @@ Creates implementation plan:
 - Creates tasks with dependencies
 - Saves plan to `.ai-factory/PLAN.md` (or branch-named file)
 - For 5+ tasks, includes commit checkpoints
+
+### `/ai-factory.improve [prompt]`
+Refine an existing plan with a second iteration:
+```
+/ai-factory.improve                                    # Auto-review: find gaps, missing tasks, wrong deps
+/ai-factory.improve добавь валидацию и обработку ошибок # Improve based on specific feedback
+```
+- Finds the active plan (`.ai-factory/PLAN.md` or branch-based `features/<branch>.md`)
+- Performs deeper codebase analysis than the initial `/task` planning
+- Finds missing tasks (migrations, configs, middleware)
+- Fixes task dependencies and descriptions
+- Removes redundant tasks
+- Shows improvement report and asks for approval before applying
+- If no plan found — suggests running `/ai-factory.task` or `/ai-factory.feature` first
 
 ### `/ai-factory.implement`
 Executes the plan:
@@ -412,6 +438,7 @@ your-project/
 │   │   ├── ai-factory/
 │   │   ├── feature/
 │   │   ├── task/
+│   │   ├── improve/
 │   │   ├── implement/
 │   │   ├── commit/
 │   │   ├── review/
@@ -506,7 +533,7 @@ All implementations include verbose, configurable logging:
   "version": "1.0.0",
   "agent": "claude",
   "skillsDir": ".claude/skills",
-  "installedSkills": ["ai-factory", "feature", "task", "implement", "commit"],
+  "installedSkills": ["ai-factory", "feature", "task", "improve", "implement", "commit"],
   "mcp": {
     "github": true,
     "postgres": false,
