@@ -42,11 +42,12 @@ export async function initCommand(): Promise<void> {
     console.log(chalk.green('✓ Configuration saved to .ai-factory.json'));
 
     let configuredMcp: string[] = [];
-    if (answers.mcpGithub || answers.mcpFilesystem || answers.mcpPostgres) {
+    if (answers.mcpGithub || answers.mcpFilesystem || answers.mcpPostgres || answers.mcpChromeDevtools) {
       configuredMcp = await configureMcp(projectDir, {
         github: answers.mcpGithub,
         filesystem: answers.mcpFilesystem,
         postgres: answers.mcpPostgres,
+        chromeDevtools: answers.mcpChromeDevtools,
       }, answers.agent);
 
       if (configuredMcp.length > 0) {

@@ -10,6 +10,7 @@ export interface WizardAnswers {
   mcpGithub: boolean;
   mcpFilesystem: boolean;
   mcpPostgres: boolean;
+  mcpChromeDevtools: boolean;
 }
 
 export async function runWizard(projectDir: string): Promise<WizardAnswers> {
@@ -64,6 +65,7 @@ export async function runWizard(projectDir: string): Promise<WizardAnswers> {
     mcpGithub: false,
     mcpFilesystem: false,
     mcpPostgres: false,
+    mcpChromeDevtools: false,
   };
 
   if (agentConfig.supportsMcp) {
@@ -97,6 +99,12 @@ export async function runWizard(projectDir: string): Promise<WizardAnswers> {
           type: 'confirm',
           name: 'mcpFilesystem',
           message: 'Filesystem MCP (advanced file operations)?',
+          default: false,
+        },
+        {
+          type: 'confirm',
+          name: 'mcpChromeDevtools',
+          message: 'Chrome Devtools MCP (inspect, debug, performance insights, analyze network requests)?',
           default: false,
         },
       ]);
