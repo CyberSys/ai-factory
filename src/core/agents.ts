@@ -56,6 +56,14 @@ const AGENT_REGISTRY: Record<string, AgentConfig> = {
     settingsFile: null,
     supportsMcp: false,
   },
+  zencoder: {
+    id: 'zencoder',
+    displayName: 'Zencoder',
+    configDir: '.zencoder',
+    skillsDir: '.zencoder/skills',
+    settingsFile: null,
+    supportsMcp: false,
+  },
   opencode: {
     id: 'opencode',
     displayName: 'OpenCode',
