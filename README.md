@@ -296,6 +296,31 @@ Generates new skills:
 - Generates a complete skill package with references from real sources
 - Supports multiple URLs, mixed sources (docs + blogs), and optional skill name hint
 
+### `/ai-factory.security-checklist [category]`
+Security audit based on OWASP Top 10 and best practices:
+```
+/ai-factory.security-checklist                  # Full audit
+/ai-factory.security-checklist auth             # Authentication & sessions
+/ai-factory.security-checklist injection        # SQL/NoSQL/Command injection
+/ai-factory.security-checklist xss              # Cross-site scripting
+/ai-factory.security-checklist csrf             # CSRF protection
+/ai-factory.security-checklist secrets          # Secrets & credentials
+/ai-factory.security-checklist api              # API security
+/ai-factory.security-checklist infra            # Infrastructure & headers
+/ai-factory.security-checklist prompt-injection # LLM prompt injection
+/ai-factory.security-checklist race-condition   # Race conditions & TOCTOU
+```
+
+Each category includes a checklist, vulnerable/safe code examples (TypeScript, PHP), and an automated audit script.
+
+**Ignoring items** — if a finding is intentionally accepted, mark it as ignored:
+```
+/ai-factory.security-checklist ignore no-csrf
+```
+- Asks for a reason, saves to `.ai-factory/SECURITY.md`
+- Future audits skip these items but still show them in an **"⏭️ Ignored Items"** section for transparency
+- Review ignored items periodically — risks change over time
+
 ## Plan Files
 
 AI Factory uses markdown files to track implementation plans:
@@ -472,6 +497,7 @@ your-project/
 ├── .ai-factory/               # AI Factory working directory
 │   ├── DESCRIPTION.md         # Project specification
 │   ├── PLAN.md                # Current plan (from /ai-factory.task)
+│   ├── SECURITY.md            # Ignored security items (from /security-checklist ignore)
 │   ├── features/              # Feature plans (from /ai-factory.feature)
 │   │   └── feature-*.md
 │   ├── patches/               # Self-improvement patches (from /ai-factory.fix)
