@@ -56,6 +56,14 @@ const AGENT_REGISTRY: Record<string, AgentConfig> = {
     settingsFile: null,
     supportsMcp: false,
   },
+  warp: {
+    id: 'warp',
+    displayName: 'Warp',
+    configDir: '.warp',
+    skillsDir: '.warp/skills',
+    settingsFile: null,
+    supportsMcp: false,
+  },
   zencoder: {
     id: 'zencoder',
     displayName: 'Zencoder',
