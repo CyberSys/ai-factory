@@ -43,7 +43,7 @@ ai-factory/
 
 ### Skills Location
 - **Package skills**: `skills/` - source of truth, copied during install
-- **User skills**: `.claude/skills/` (Claude Code) or `.ai/skills/` (universal)
+- **User skills**: `.claude/skills/` (Claude Code), `.opencode/skills/` (OpenCode), or `.ai/skills/` (universal)
 
 ### Working Directory
 All AI Factory files in user projects go to `.ai-factory/`:
@@ -209,6 +209,43 @@ ai-factory update
 1. Edit relevant skill in `skills/`
 2. Update AGENTS.md if logic changes
 3. Rebuild and test with `ai-factory update`
+
+### Adding a new agent
+
+To add support for a new AI coding agent:
+
+1. **`src/core/agents.ts`** — add entry to `AGENT_REGISTRY`:
+   ```ts
+   newagent: {
+     id: 'newagent',
+     displayName: 'New Agent',
+     configDir: '.newagent',          // where agent stores config
+     skillsDir: '.newagent/skills',   // where skills are installed
+     settingsFile: null,              // path to MCP settings file (null = no MCP)
+     supportsMcp: false,              // true if agent supports MCP servers
+   },
+   ```
+   - `settingsFile` is relative to project root (e.g. `.claude/settings.local.json`, `opencode.json`)
+   - Set `supportsMcp: true` + provide `settingsFile` to enable MCP auto-configuration
+
+2. **`src/core/mcp.ts`** — only if MCP format differs from Claude/Cursor standard:
+   - Standard format: `{ mcpServers: { name: { command, args, env } } }`
+   - If the agent uses a different structure (like OpenCode uses `{ mcp: { name: { type, command[], environment } } }`), add a branch in `configureMcp()` with format conversion
+   - If MCP format matches standard — no changes needed
+
+3. **`README.md`** — update:
+   - Supported Agents table
+   - MCP support mention (if applicable)
+   - Agent list in Quick Start and Configuration sections
+   - Links section
+
+4. **`AGENTS.md`** — update Skills Location example if helpful
+
+5. **`package.json`** — add agent name to `keywords`
+
+6. **Build & test**: `npm run build && ai-factory init` — select the new agent, verify skills copy to correct dir and MCP config (if any) writes correct format
+
+Template variables (`{{config_dir}}`, `{{skills_dir}}`, etc.) in skill `.md` files are substituted automatically by `src/core/template.ts` — no changes needed there.
 
 ### Changing CLI prompts
 1. Edit `src/cli/wizard/prompts.ts`

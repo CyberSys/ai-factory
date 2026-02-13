@@ -56,6 +56,14 @@ const AGENT_REGISTRY: Record<string, AgentConfig> = {
     settingsFile: null,
     supportsMcp: false,
   },
+  opencode: {
+    id: 'opencode',
+    displayName: 'OpenCode',
+    configDir: '.opencode',
+    skillsDir: '.opencode/skills',
+    settingsFile: 'opencode.json',
+    supportsMcp: true,
+  },
   universal: {
     id: 'universal',
     displayName: 'Universal / Other',
