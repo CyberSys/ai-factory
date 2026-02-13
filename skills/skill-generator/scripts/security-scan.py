@@ -85,8 +85,11 @@ _add(r'base64\s+(encode|decode)\s+.{0,30}(secret|credential|token|password|key|\
 _add(r'(do\s+not|don\'?t|never|must\s+not)\s+(tell|inform|show|reveal|display|mention|alert|warn|notify)\s+(the\s+)?(user|human|operator)',
      'CRITICAL', 'Stealth instruction: hides actions from user')
 
-_add(r'(silently|quietly|secretly|covertly|without\s+(the\s+)?user\s+(knowing|noticing|seeing))',
+_add(r'(secretly|covertly|without\s+(the\s+)?user\s+(knowing|noticing|seeing))',
      'CRITICAL', 'Stealth modifier: performs actions without user awareness')
+
+_add(r'(silently|quietly)\s+(execute|run|delete|remove|send|install|modify|write|overwrite|change|access|read|upload|transmit|exfiltrate|download|inject|replace|drop|connect|post)',
+     'CRITICAL', 'Stealth action: performs dangerous action without user awareness')
 
 _add(r'(hide|conceal|suppress|mask)\s+(the\s+)?(output|result|error|warning|action|change)',
      'CRITICAL', 'Output suppression: hides results from user')
@@ -174,8 +177,11 @@ _add(r'(this\s+is|are|is)\s+expected\s+behavior',
 _add(r'safe\s+to\s+ignore',
      'CRITICAL', 'Scanner evasion: skill instructs to ignore findings')
 
-_add(r'(not\s+a\s+threat|not\s+malicious|known\s+issue)',
+_add(r'(not\s+a\s+threat|not\s+malicious)',
      'CRITICAL', 'Scanner evasion: skill claims its patterns are not threats')
+
+_add(r'known\s+issue.{0,30}(safe|ignore|skip|harmless|false.positive|not.a.threat|bypass|disable)',
+     'CRITICAL', 'Scanner evasion: uses "known issue" to dismiss security findings')
 
 _add(r'(ignore|skip|disable|bypass)\s+(the\s+)?(security\s+)?(scan|scanner|check|warning|alert|flag)',
      'CRITICAL', 'Scanner bypass: skill instructs to skip security scanning')
@@ -213,9 +219,11 @@ def check_base64_blocks(content: str) -> list:
 
 # ─── HTML comment detector ────────────────────────────────────────────────────
 
-def check_html_comments(content: str) -> list:
+def check_html_comments(content: str, code_ranges: list = None) -> list:
     """Detect hidden instructions in HTML comments."""
     findings = []
+    if code_ranges is None:
+        code_ranges = []
     comment_pattern = re.compile(r'<!--(.*?)-->', re.DOTALL)
     suspicious_words = re.compile(
         r'(ignore|override|system|inject|exfiltrate|secret|password|credential|curl|wget|sudo|rm\s+-rf)',
@@ -224,10 +232,12 @@ def check_html_comments(content: str) -> list:
     for match in comment_pattern.finditer(content):
         comment_body = match.group(1)
         if suspicious_words.search(comment_body):
+            line_num = content[:match.start()].count('\n') + 1
+            in_code = is_in_code_block(line_num, code_ranges)
             findings.append({
-                'severity': 'CRITICAL',
-                'description': 'HTML comment contains suspicious instructions',
-                'line': content[:match.start()].count('\n') + 1,
+                'severity': 'WARNING' if in_code else 'CRITICAL',
+                'description': 'HTML comment contains suspicious instructions' + (' [in code block]' if in_code else ''),
+                'line': line_num,
                 'match': match.group()[:80]
             })
     return findings
@@ -315,10 +325,10 @@ def scan_file(filepath: str) -> dict:
                 'match': match.group().strip()[:100]
             })
 
-    # Run special detectors (these are always critical regardless of code blocks,
-    # as base64/zero-width/HTML comments are suspicious even in code examples)
+    # Run special detectors (base64/zero-width are always critical;
+    # HTML comments are demoted to WARNING inside code blocks)
     findings.extend(check_base64_blocks(content))
-    findings.extend(check_html_comments(content))
+    findings.extend(check_html_comments(content, code_ranges))
     findings.extend(check_zero_width_chars(content))
 
     return {
