@@ -1,7 +1,7 @@
 ---
 name: ai-factory.feature
 description: Start a new feature development. Creates a git branch with a logical name based on feature description, then invokes /ai-factory.task to create an implementation plan. Use when user says "new feature", "start feature", "implement feature", or "add feature".
-argument-hint: <feature description>
+argument-hint: [--parallel | --list | --cleanup <branch>] <feature description>
 allowed-tools: Bash(git *) Read Write Skill AskUserQuestion
 disable-model-invocation: true
 ---
@@ -28,6 +28,40 @@ Check if git is initialized. If not, initialize it.
 ```bash
 git rev-parse --is-inside-work-tree 2>/dev/null || git init
 ```
+
+### Step 0.2: Parse Flags
+
+Extract flags from `$ARGUMENTS` before parsing the feature description:
+
+```
+--parallel  → Enable parallel worktree mode
+--list      → Show all active worktrees with feature status
+--cleanup <branch> → Remove worktree and optionally delete branch
+```
+
+**Parsing rules:**
+- Strip `--parallel`, `--list`, `--cleanup <branch>` from `$ARGUMENTS`
+- Remaining text becomes the feature description
+- `--list` and `--cleanup` are standalone — they execute immediately and stop (do NOT continue to Step 1+)
+
+**Examples:**
+```
+/ai-factory.feature --parallel Add user authentication
+→ parallel=true, description="Add user authentication"
+
+/ai-factory.feature --list
+→ show all active worktrees, then STOP
+
+/ai-factory.feature --cleanup feature/user-auth
+→ remove worktree for that branch, then STOP
+
+/ai-factory.feature Add user authentication
+→ normal flow (unchanged), parallel=false
+```
+
+**If `--list` is present**, jump to the [--list Subcommand](#--list-subcommand) section.
+**If `--cleanup` is present**, jump to the [--cleanup Subcommand](#--cleanup-subcommand) section.
+**Otherwise**, continue to Step 1.
 
 ### Step 1: Parse Feature Description
 
@@ -73,7 +107,101 @@ Before we start, a few questions:
 
 Store the testing preference - it will be passed to `/ai-factory.task` and `/ai-factory.implement`.
 
-### Step 4: Create Branch
+### Step 4 (Parallel): Create Worktree
+
+**Only when `--parallel` flag is set.** If not set, skip to Step 4 (Normal).
+
+This creates an isolated working directory so multiple features can be developed concurrently, each with its own Claude Code session.
+
+#### 4a. Get project directory name
+
+```bash
+DIRNAME=$(basename "$(pwd)")
+# e.g. "my-project"
+```
+
+#### 4b. Create branch on main
+
+```bash
+git branch <branch-name> main
+```
+
+If the branch already exists, ask the user whether to reuse it or pick a different name.
+
+#### 4c. Create worktree
+
+```bash
+git worktree add ../${DIRNAME}-<branch-name-with-hyphens> <branch-name>
+```
+
+Convert the branch name for the directory: replace `/` with `-`.
+
+**Example:**
+```
+Project dir: my-project
+Branch: feature/user-auth
+Worktree: ../my-project-feature-user-auth
+```
+
+#### 4d. Copy context files to worktree
+
+Copy these files/directories so the worktree has full AI context:
+
+```bash
+WORKTREE="../${DIRNAME}-<branch-name-with-hyphens>"
+
+# Project context
+cp .ai-factory/DESCRIPTION.md "${WORKTREE}/.ai-factory/DESCRIPTION.md" 2>/dev/null
+
+# Past lessons / patches
+cp -r .ai-factory/patches/ "${WORKTREE}/.ai-factory/patches/" 2>/dev/null
+
+# Claude Code skills + settings (required for Claude Code to work)
+cp -r .claude/ "${WORKTREE}/.claude/" 2>/dev/null
+
+# CLAUDE.md only if it exists and is NOT tracked by git
+if [ -f CLAUDE.md ] && ! git ls-files --error-unmatch CLAUDE.md &>/dev/null; then
+  cp CLAUDE.md "${WORKTREE}/CLAUDE.md"
+fi
+```
+
+**Note:** Files tracked by git are already in the worktree via the checkout. Only copy untracked context files.
+
+#### 4e. Create features directory in worktree
+
+```bash
+mkdir -p "${WORKTREE}/.ai-factory/features"
+```
+
+#### 4f. Output instructions to user
+
+Display the following message so the user knows how to start working in the new worktree:
+
+```
+✅ Parallel worktree created!
+
+  Branch:    <branch-name>
+  Directory: <worktree-path>
+
+To start working on this feature:
+
+  cd <worktree-path>
+  claude
+
+Then inside Claude Code:
+
+  /ai-factory.task <feature description>
+
+To see all active worktrees:
+  /ai-factory.feature --list
+
+To clean up when done:
+  /ai-factory.feature --cleanup <branch-name>
+```
+
+**STOP here** — do NOT continue to Step 5. The user will invoke `/ai-factory.task` themselves in the new worktree's Claude Code session.
+
+### Step 4 (Normal): Create Branch
 
 ```bash
 # Ensure we're on main/master and up to date
@@ -127,6 +255,54 @@ git branch --show-current  # → feature/user-authentication
 # → Look for .ai-factory/features/feature-user-authentication.md
 ```
 
+## --list Subcommand
+
+When `--list` is passed, show all active worktrees and their feature status. Then **STOP** — do not continue the normal workflow.
+
+```bash
+# Show all worktrees
+git worktree list
+```
+
+Additionally, for each worktree path from the output:
+1. Check if `<worktree>/.ai-factory/features/` contains any plan files
+2. For each plan file found, show its name and whether it looks complete (has tasks) or is still in progress
+
+**Output format:**
+```
+Active worktrees:
+
+  /path/to/my-project          (main)        ← you are here
+  /path/to/my-project-feature-user-auth  (feature/user-auth)  → Plan: feature-user-auth.md
+  /path/to/my-project-fix-cart-bug       (fix/cart-bug)        → No plan yet
+```
+
+## --cleanup Subcommand
+
+When `--cleanup <branch>` is passed, remove the worktree and optionally delete the branch. Then **STOP**.
+
+```bash
+DIRNAME=$(basename "$(pwd)")
+BRANCH_DIR=$(echo "<branch>" | tr '/' '-')
+WORKTREE="../${DIRNAME}-${BRANCH_DIR}"
+
+# Remove the worktree
+git worktree remove "${WORKTREE}"
+
+# Only delete branch if it's been merged into main
+git branch -d <branch>  # -d (not -D) will fail if unmerged, which is safe
+```
+
+If `git branch -d` fails because the branch is unmerged, inform the user:
+
+```
+⚠️  Branch <branch> has unmerged changes.
+To force-delete: git branch -D <branch>
+To merge first: git checkout main && git merge <branch>
+```
+
+If the worktree path doesn't exist, check `git worktree list` and suggest the correct path.
+
 ## Examples
 
 **User:** `/ai-factory.feature Add user authentication with email/password and OAuth`
@@ -137,6 +313,33 @@ git branch --show-current  # → feature/user-authentication
 3. Ask about testing preference
 4. Create branch: `git checkout -b feature/user-authentication`
 5. Call: `/ai-factory.task Add user authentication with email/password and OAuth`
+
+**User:** `/ai-factory.feature --parallel Add Stripe checkout integration`
+
+**Actions:**
+1. Parse flags: `--parallel` found, description = "Add Stripe checkout integration"
+2. Generate branch: `feature/stripe-checkout`
+3. Ask about testing preference
+4. Get dirname: `my-project`
+5. Create branch: `git branch feature/stripe-checkout main`
+6. Create worktree: `git worktree add ../my-project-feature-stripe-checkout feature/stripe-checkout`
+7. Copy context files (.ai-factory/DESCRIPTION.md, .ai-factory/patches/, .claude/, CLAUDE.md if untracked)
+8. Output instructions to user — STOP
+
+**User:** `/ai-factory.feature --list`
+
+**Actions:**
+1. Run `git worktree list`
+2. Check each worktree for plan files in `.ai-factory/features/`
+3. Display formatted list — STOP
+
+**User:** `/ai-factory.feature --cleanup feature/stripe-checkout`
+
+**Actions:**
+1. Compute worktree path: `../my-project-feature-stripe-checkout`
+2. Run `git worktree remove ../my-project-feature-stripe-checkout`
+3. Run `git branch -d feature/stripe-checkout`
+4. Report result — STOP
 
 **User:** `/ai-factory.feature Fix cart not updating quantities correctly`
 

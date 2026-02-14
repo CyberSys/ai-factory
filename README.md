@@ -173,6 +173,7 @@ Then open your AI agent and start working:
 |---------|----------|-----------------|---------------|
 | `/ai-factory.task` | Small tasks, quick fixes, experiments | No | `.ai-factory/PLAN.md` |
 | `/ai-factory.feature` | Full features, stories, epics | Yes | `.ai-factory/features/<branch>.md` |
+| `/ai-factory.feature --parallel` | Concurrent features via worktrees | Yes + worktree | User runs `/ai-factory.task` in worktree |
 | `/ai-factory.improve` | Refine plan before implementation | No | No (improves existing) |
 | `/ai-factory.fix` | Bug fixes, errors, hotfixes | No | No (direct fix) |
 
@@ -210,6 +211,20 @@ Starts a new feature:
 - Asks about testing and logging preferences
 - Creates plan file (`feature-user-authentication.md`)
 - Invokes `/ai-factory.task` to create implementation plan
+
+**Parallel mode** — work on multiple features simultaneously using `git worktree`:
+```
+/ai-factory.feature --parallel Add Stripe checkout
+```
+- Creates a separate working directory (`../my-project-feature-stripe-checkout`)
+- Copies AI context files (`.ai-factory/`, `.claude/`, `CLAUDE.md`)
+- Each feature gets its own Claude Code session — no branch switching, no conflicts
+
+**Manage parallel features:**
+```
+/ai-factory.feature --list                          # Show all active worktrees
+/ai-factory.feature --cleanup feature/stripe-checkout # Remove worktree and branch
+```
 
 ### `/ai-factory.task <description>`
 Creates implementation plan:
