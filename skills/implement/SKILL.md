@@ -239,6 +239,18 @@ Ready to commit? Use:
 > This frees up context and avoids confusion from the previous implementation.
 ```
 
+**Check if documentation needs updating:**
+
+Read the plan file settings. If documentation preference is set to "yes" (from `/ai-factory.feature` questions), run `/ai-factory.docs` to update documentation.
+
+If documentation preference is "no" or not set — skip this step silently.
+
+If documentation preference is "yes":
+```
+📝 Updating project documentation...
+```
+→ Invoke `/ai-factory.docs` to analyze changes and update docs.
+
 **Handle plan file after completion:**
 
 - **If `.ai-factory/PLAN.md`** (direct /ai-factory.task, not from /ai-factory.feature):

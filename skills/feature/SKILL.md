@@ -102,10 +102,14 @@ Before we start, a few questions:
    - [ ] Yes, write tests
    - [ ] No, skip tests
 
-2. Any specific requirements or constraints?
+2. Update documentation after implementation?
+   - [ ] Yes, update docs (/ai-factory.docs)
+   - [ ] No, skip docs
+
+3. Any specific requirements or constraints?
 ```
 
-Store the testing preference - it will be passed to `/ai-factory.task` and `/ai-factory.implement`.
+Store the testing and documentation preferences - they will be passed to `/ai-factory.task` and `/ai-factory.implement`.
 
 ### Step 4 (Parallel): Create Worktree
 
@@ -374,7 +378,11 @@ Before we start:
    - [ ] Standard - INFO level, key events only
    - [ ] Minimal - only WARN/ERROR
 
-3. Any specific requirements or constraints?
+3. Update documentation after implementation?
+   - [ ] Yes, update docs (/ai-factory.docs)
+   - [ ] No, skip docs
+
+4. Any specific requirements or constraints?
 ```
 
 **Default to verbose logging.** AI-generated code benefits greatly from extensive logging because:
@@ -387,4 +395,4 @@ Before we start:
 - Implement log rotation for file-based logs
 - Ensure production can run with minimal logs without code changes
 
-Pass the logging preference to `/ai-factory.task` along with testing preference.
+Pass the logging and documentation preferences to `/ai-factory.task` along with testing preference.

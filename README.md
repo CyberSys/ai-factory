@@ -64,9 +64,26 @@ Then open your AI agent and start working:
 
 # Fix a bug — AI learns from every fix and gets smarter over time
 /ai-factory.fix TypeError: Cannot read property 'name' of undefined
+
+# Generate project documentation — README + docs/ with topics
+/ai-factory.docs
 ```
 
 See the full [Development Workflow](docs/workflow.md) with diagram and decision table.
+
+### Auto-Generated Documentation
+
+AI Factory can generate and maintain your project docs with a single command:
+
+```bash
+/ai-factory.docs          # Creates README + docs/ structure from your codebase
+/ai-factory.docs --web    # Also generates a static HTML documentation site
+```
+
+- **Generates docs from scratch** — analyzes your codebase and creates a lean README + detailed `docs/` pages by topic
+- **Cleans up scattered files** — finds loose CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md in your root and consolidates them into a structured `docs/` directory
+- **Keeps docs in sync** — integrates with `/ai-factory.implement` so documentation is updated automatically after each feature
+- **Builds a docs website** — `--web` generates a static HTML site with navigation and dark mode, ready to host
 
 ---
 
@@ -76,7 +93,7 @@ See the full [Development Workflow](docs/workflow.md) with diagram and decision 
 |-------|-------------|
 | [Getting Started](docs/getting-started.md) | What is AI Factory, supported agents, CLI commands |
 | [Development Workflow](docs/workflow.md) | Workflow diagram, when to use what, spec-driven approach |
-| [Core Skills](docs/skills.md) | All slash commands — feature, task, fix, implement, evolve, and more |
+| [Core Skills](docs/skills.md) | All slash commands — feature, task, fix, implement, evolve, docs, and more |
 | [Plan Files](docs/plan-files.md) | Plan files, self-improvement patches, skill acquisition |
 | [Security](docs/security.md) | Two-level security scanning for external skills |
 | [Configuration](docs/configuration.md) | `.ai-factory.json`, MCP servers, project structure, best practices |

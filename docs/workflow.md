@@ -1,4 +1,4 @@
-[← Back to README](../README.md)
+[← Getting Started](getting-started.md) · [Back to README](../README.md) · [Core Skills →](skills.md)
 
 # Development Workflow
 
@@ -106,7 +106,7 @@ These skills form the development pipeline. Each one feeds into the next.
 /ai-factory.feature Add user authentication with OAuth
 ```
 
-Creates a git branch, asks about testing/logging preferences, builds a plan file, and invokes `/ai-factory.task` to break it into steps. For parallel work on multiple features, use `--parallel` to create isolated worktrees.
+Creates a git branch, asks about testing/logging/docs preferences, builds a plan file, and invokes `/ai-factory.task` to break it into steps. For parallel work on multiple features, use `--parallel` to create isolated worktrees.
 
 ### `/ai-factory.task <description>` — plan the work
 
@@ -133,7 +133,7 @@ Second-pass analysis. Finds missing tasks (migrations, configs, middleware), fix
 /ai-factory.implement status # Check progress
 ```
 
-Reads past patches from `.ai-factory/patches/` to learn from previous mistakes, then executes tasks one by one with commit checkpoints.
+Reads past patches from `.ai-factory/patches/` to learn from previous mistakes, then executes tasks one by one with commit checkpoints. If the plan has `Docs: yes`, runs `/ai-factory.docs` after completion.
 
 ### `/ai-factory.fix <bug description>` — fix and learn
 
@@ -154,7 +154,7 @@ Reads all accumulated patches, analyzes project patterns, and proposes targeted 
 
 ---
 
-For full details on all skills including utility commands (`/ai-factory.commit`, `/ai-factory.skill-generator`, `/ai-factory.security-checklist`), see [Core Skills](skills.md).
+For full details on all skills including utility commands (`/ai-factory.docs`, `/ai-factory.commit`, `/ai-factory.skill-generator`, `/ai-factory.security-checklist`), see [Core Skills](skills.md).
 
 ## Why Spec-Driven?
 

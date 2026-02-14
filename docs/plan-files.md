@@ -1,4 +1,4 @@
-[← Back to README](../README.md)
+[← Core Skills](skills.md) · [Back to README](../README.md) · [Security →](security.md)
 
 # Plan Files
 
@@ -20,6 +20,7 @@ Created: 2024-01-15
 ## Settings
 - Testing: no
 - Logging: verbose
+- Docs: yes          # /ai-factory.implement will run /ai-factory.docs after completion
 
 ## Commit Plan
 - **Commit 1** (tasks 1-3): "feat: add user model and types"

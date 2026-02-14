@@ -1,4 +1,4 @@
-[← Back to README](../README.md)
+[← Security](security.md) · [Back to README](../README.md)
 
 # Configuration
 
@@ -46,6 +46,7 @@ your-project/
 │   │   ├── improve/
 │   │   ├── implement/
 │   │   ├── commit/
+│   │   ├── docs/
 │   │   ├── review/
 │   │   └── skill-generator/
 │   └── settings.local.json    # MCP config (Claude/Cursor, gitignored)

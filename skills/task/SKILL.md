@@ -125,6 +125,7 @@ Created: [date]
 ## Settings
 - Testing: yes/no
 - Logging: verbose/standard/minimal
+- Docs: yes/no
 
 ## Commit Plan
 <!-- For plans with 5+ tasks, define commit checkpoints -->

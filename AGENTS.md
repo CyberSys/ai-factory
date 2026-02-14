@@ -28,6 +28,7 @@ ai-factory/
 │   ├── fix/                # Quick bug fixes (no plans)
 │   ├── evolve/             # Self-improve skills based on context
 │   ├── commit/             # Conventional commits
+│   ├── docs/               # Documentation generation & maintenance
 │   ├── review/             # Code review
 │   ├── deploy/             # Deployment helper
 │   ├── skill-generator/    # Generate new skills
@@ -58,6 +59,7 @@ All skills use `ai-factory.` namespace prefix:
 - `/ai-factory.task`
 - `/ai-factory.implement`
 - `/ai-factory.commit`
+- `/ai-factory.docs`
 - etc.
 
 ## Workflow Logic
@@ -233,6 +235,7 @@ docs/
 | Security scanning changed | `docs/security.md` |
 | Plan file format changed | `docs/plan-files.md` |
 | New CLI command | `docs/getting-started.md` (CLI Commands section) |
+| Documentation conventions changed | `skills/docs/SKILL.md` (principles and templates) |
 
 ## Common Changes
 

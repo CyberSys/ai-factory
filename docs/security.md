@@ -1,4 +1,4 @@
-[← Back to README](../README.md)
+[← Plan Files](plan-files.md) · [Back to README](../README.md) · [Configuration →](configuration.md)
 
 # Security
 

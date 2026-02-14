@@ -1,4 +1,4 @@
-[← Back to README](../README.md)
+[← Development Workflow](workflow.md) · [Back to README](../README.md) · [Plan Files →](plan-files.md)
 
 # Core Skills
 
@@ -12,7 +12,7 @@ Starts a new feature:
 /ai-factory.feature Add user authentication with OAuth
 ```
 - Creates git branch (`feature/user-authentication`)
-- Asks about testing and logging preferences
+- Asks about testing, logging, and documentation preferences
 - Creates plan file (`feature-user-authentication.md`)
 - Invokes `/ai-factory.task` to create implementation plan
 
@@ -66,6 +66,7 @@ Executes the plan:
 - Finds plan file (.ai-factory/PLAN.md or branch-based)
 - Executes tasks one by one
 - Prompts for commits at checkpoints
+- If plan has `Docs: yes` — runs `/ai-factory.docs` after completion
 - Offers to delete .ai-factory/PLAN.md when done
 
 ### `/ai-factory.fix <bug description>`
@@ -112,6 +113,29 @@ When called with a description:
 - Transforms your idea into a structured, professional description
 
 **Does NOT implement your project** - only sets up context.
+
+### `/ai-factory.docs [--web]`
+Generates and maintains project documentation:
+```
+/ai-factory.docs          # Generate or improve documentation
+/ai-factory.docs --web    # Also generate HTML version in docs-html/
+```
+
+**Smart detection** — adapts to your project's current state:
+- **No README?** — analyzes your codebase and creates a lean README (~100 lines) as a landing page + `docs/` directory with topic pages
+- **Long README?** — proposes splitting into a landing-page README with detailed content moved to `docs/`
+- **Docs exist?** — audits for stale content, broken links, missing topics, and outdated formatting
+
+**Scattered .md cleanup** — finds loose markdown files in your project root (CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md, DEPLOYMENT.md, etc.) and proposes consolidating them into a structured `docs/` directory. No more documentation scattered across 10 root-level files.
+
+**Stays in sync with your code** — when `/ai-factory.feature` asks "Update documentation?" and you say yes, the plan gets `Docs: yes`. After `/ai-factory.implement` finishes all tasks, it automatically runs `/ai-factory.docs` to update documentation. Your docs grow with your codebase, not after the fact.
+
+**Documentation website** — `--web` flag generates a complete static HTML site in `docs-html/` with navigation bar, dark mode support, and clean typography. Ready to host on GitHub Pages or any static hosting.
+
+**Quality checks:**
+- Every docs/ page gets prev/next navigation header + "See Also" cross-links
+- Technical review — verifies links, structure, code examples, no content loss
+- Readability review — "new user eyes" checklist: is it clear, scannable, jargon-free?
 
 ### `/ai-factory.commit`
 Creates conventional commits:
