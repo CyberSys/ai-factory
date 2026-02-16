@@ -1,6 +1,6 @@
 ---
 name: ai-factory.fix
-description: Fix a specific bug or problem in the codebase. Supports two modes - immediate fix or plan-first. Without arguments executes existing FIX_PLAN.md. Always suggests test coverage and adds logging.
+description: Fix a specific bug or problem in the codebase. Supports two modes - immediate fix or plan-first. Without arguments executes existing FIX_PLAN.md. Always suggests test coverage and adds logging. Use when user says "fix bug", "debug this", "something is broken", or pastes an error message.
 argument-hint: <bug description or error message>
 allowed-tools: Read Write Edit Glob Grep Bash AskUserQuestion
 disable-model-invocation: false

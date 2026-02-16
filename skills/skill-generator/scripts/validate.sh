@@ -103,25 +103,29 @@ else
     fi
 fi
 
-# Check description field - handle multiline
-DESC_LINE=$(echo "$FRONTMATTER" | grep -n "^description:" | head -1 | cut -d: -f1)
+# Check description field - handle multiline (read directly from file to avoid quoting issues)
+DESC=$(awk '
+    /^---$/ { n++; next }
+    n == 1 && /^description:/ {
+        found = 1
+        sub(/^description:[[:space:]]*/, "")
+        if ($0 ~ /^[>|]/) next
+        if ($0 != "") desc = desc $0 " "
+        next
+    }
+    n == 1 && found && /^[[:space:]]/ {
+        gsub(/^[[:space:]]+/, "")
+        desc = desc $0 " "
+        next
+    }
+    n == 1 && found && /^[^[:space:]]/ { exit }
+    n == 2 { exit }
+    END { print desc }
+' "$SKILL_MD")
 
-if [[ -z "$DESC_LINE" ]]; then
+if [[ -z "$DESC" ]]; then
     error "Missing required 'description' field"
 else
-    # Get description value (may be on same line or multiline)
-    DESC_SAME_LINE=$(echo "$FRONTMATTER" | sed -n "${DESC_LINE}p" | sed 's/^description:[[:space:]]*//')
-
-    # If it starts with > or | it's multiline
-    if [[ "$DESC_SAME_LINE" =~ ^[\>\|] ]] || [[ -z "$DESC_SAME_LINE" ]]; then
-        # Get all indented lines after description:
-        DESC=$(echo "$FRONTMATTER" | awk -v start="$DESC_LINE" '
-            NR > start && /^[[:space:]]/ { gsub(/^[[:space:]]+/, ""); printf "%s ", $0 }
-            NR > start && /^[a-z]/ { exit }
-        ')
-    else
-        DESC="$DESC_SAME_LINE"
-    fi
 
     DESC_LEN=${#DESC}
     if [[ $DESC_LEN -gt 1024 ]]; then
