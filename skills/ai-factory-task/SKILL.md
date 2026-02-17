@@ -2,7 +2,7 @@
 name: ai-factory-task
 description: Create a step-by-step implementation plan for a feature or task. Breaks down work into actionable tasks tracked via the task system. Use when user says "plan", "create tasks", "break down", or "make a plan for".
 argument-hint: <task description>
-allowed-tools: Read Write Glob Grep Bash(git *) TaskCreate TaskUpdate TaskList AskUserQuestion
+allowed-tools: Read Write Glob Grep Bash(git *) TaskCreate TaskUpdate TaskList AskUserQuestion Task
 disable-model-invocation: false
 ---
 
@@ -75,7 +75,39 @@ Should I include test tasks in the plan?
 
 ### Step 4: Explore Codebase
 
-Before planning, understand the existing code:
+Before planning, understand the existing code through **parallel exploration**.
+
+**Use `Task` tool with `subagent_type: Explore` to investigate the codebase in parallel.** This keeps the main context clean and speeds up research.
+
+Launch 2-3 Explore agents simultaneously, each focused on a different aspect:
+
+```
+Agent 1 — Architecture & affected modules:
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Find files and modules related to [feature domain]. Map the directory structure,
+   key entry points, and how modules interact. Thoroughness: medium.")
+
+Agent 2 — Existing patterns & conventions:
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Find examples of similar functionality already implemented in the project.
+   Show patterns for [relevant patterns: API endpoints, services, models, etc.].
+   Thoroughness: medium.")
+
+Agent 3 — Dependencies & integration points (if needed):
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Find all files that import/use [module/service]. Identify integration points
+   and potential side effects of changes. Thoroughness: medium.")
+```
+
+**If `/ai-factory-feature` passed codebase reconnaissance** from Step 1.5 — use it as a starting point. Focus Explore agents on areas that need deeper understanding, don't repeat the reconnaissance.
+
+**After agents return, synthesize:**
+- Which files need to be created/modified
+- What patterns to follow (from existing code)
+- Dependencies between components
+- Potential risks or edge cases
+
+**Fallback:** If Task tool is unavailable, use Glob/Grep/Read directly as before:
 - Find relevant files and patterns
 - Identify where changes need to be made
 - Note existing conventions to follow

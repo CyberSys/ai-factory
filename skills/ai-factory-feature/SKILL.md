@@ -2,7 +2,7 @@
 name: ai-factory-feature
 description: End-to-end feature development. Creates git branch, plans implementation via /ai-factory-task, then executes via /ai-factory-implement — full cycle without manual steps. Use when user says "new feature", "start feature", "implement feature", or "add feature".
 argument-hint: "[--parallel | --list | --cleanup <branch>] <feature description>"
-allowed-tools: Bash(git *) Bash(cd *) Bash(cp *) Bash(mkdir *) Bash(basename *) Read Write Skill AskUserQuestion
+allowed-tools: Bash(git *) Bash(cd *) Bash(cp *) Bash(mkdir *) Bash(basename *) Read Write Skill AskUserQuestion Task
 disable-model-invocation: true
 ---
 
@@ -69,6 +69,29 @@ From `$ARGUMENTS`, extract:
 - Core functionality being added
 - Key domain terms
 - Type (feature, enhancement, fix, refactor)
+
+### Step 1.5: Quick Codebase Reconnaissance
+
+**Use `Task` tool with `subagent_type: Explore` to quickly understand the relevant parts of the codebase.** This runs as a subagent and keeps the main context clean.
+
+Based on the parsed feature description, launch 1-2 Explore agents in parallel:
+
+```
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "In [project root], find files and modules related to [feature domain keywords].
+   Report: key directories, relevant files, existing patterns, integration points.
+   Thoroughness: quick. Be concise — return a structured summary, not file contents.")
+```
+
+**Use results to:**
+- Generate a more accurate branch name (Step 2)
+- Ask more informed questions about scope and constraints (Step 3)
+- Pass richer context to `/ai-factory-task` (Step 5)
+
+**Rules:**
+- 1-2 agents max, "quick" thoroughness — this is reconnaissance, not deep analysis
+- Deep exploration happens later in `/ai-factory-task`
+- If `.ai-factory/DESCRIPTION.md` already provides sufficient context about the affected area, this step can be skipped
 
 ### Step 2: Generate Branch Name
 
@@ -235,6 +258,7 @@ CONTEXT FROM /ai-factory-feature:
 - Plan file: .ai-factory/features/feature-user-authentication.md (use this name, NOT .ai-factory/PLAN.md)
 - Testing: yes/no
 - Logging: verbose/standard/minimal
+- Codebase reconnaissance: [summary from Step 1.5 — key directories, relevant files, existing patterns]
 ```
 
 **IMPORTANT:** Pass the exact plan filename to /ai-factory-task. This distinguishes feature-based work from direct /ai-factory-task calls.

@@ -2,7 +2,7 @@
 name: ai-factory-fix
 description: Fix a specific bug or problem in the codebase. Supports two modes - immediate fix or plan-first. Without arguments executes existing FIX_PLAN.md. Always suggests test coverage and adds logging. Use when user says "fix bug", "debug this", "something is broken", or pastes an error message.
 argument-hint: <bug description or error message>
-allowed-tools: Read Write Edit Glob Grep Bash AskUserQuestion
+allowed-tools: Read Write Edit Glob Grep Bash AskUserQuestion Task
 disable-model-invocation: false
 ---
 
@@ -83,10 +83,12 @@ Options:
 
 Investigate the codebase enough to understand the problem and create a plan.
 
-1. Search for relevant files using Glob/Grep
-2. Read the code around the issue
-3. Trace the data flow
-4. Identify the root cause (or most likely candidates)
+**Use the same parallel exploration approach as Step 2** — launch Explore agents to investigate the problem area, related code, and past patterns simultaneously.
+
+After agents return, synthesize findings to:
+1. Identify the root cause (or most likely candidates)
+2. Map affected files and functions
+3. Assess impact scope
 
 Then create `.ai-factory/FIX_PLAN.md` with this structure:
 
@@ -144,16 +146,40 @@ Review the plan and when you're ready to execute, run:
 
 ### Step 2: Investigate the Codebase
 
-**Search for the problem:**
+**Use `Task` tool with `subagent_type: Explore` to investigate the problem in parallel.** This keeps the main context clean and allows simultaneous investigation of multiple angles.
+
+Launch 2-3 Explore agents simultaneously:
+
+```
+Agent 1 — Locate the problem area:
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Find code related to [error location / affected functionality].
+   Read the relevant functions, trace the data flow.
+   Thoroughness: medium.")
+
+Agent 2 — Related code & side effects:
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Find all callers/consumers of [affected function/module].
+   Identify what else might break or be affected.
+   Thoroughness: medium.")
+
+Agent 3 — Similar past patterns (if patches exist):
+Task(subagent_type: Explore, model: sonnet, prompt:
+  "Search for similar error patterns or related fixes in the codebase.
+   Check git log for recent changes to [affected files].
+   Thoroughness: quick.")
+```
+
+**After agents return, synthesize findings to identify:**
+- The root cause (not just symptoms)
+- Related code that might be affected
+- Existing error handling
+
+**Fallback:** If Task tool is unavailable, investigate directly:
 - Find relevant files using Glob/Grep
 - Read the code around the issue
 - Trace the data flow
 - Check for similar patterns elsewhere
-
-**Look for:**
-- The root cause (not just symptoms)
-- Related code that might be affected
-- Existing error handling
 
 ### Step 3: Implement the Fix
 
