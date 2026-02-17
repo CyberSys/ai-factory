@@ -3,19 +3,23 @@ import { detectStack, type DetectedStack } from './detector.js';
 import { getAvailableSkills } from '../../core/installer.js';
 import { getAgentConfig, getAgentChoices } from '../../core/agents.js';
 
-export interface WizardAnswers {
-  agent: string;
-  skillsDir: string;
-  selectedSkills: string[];
+export interface AgentWizardSelection {
+  id: string;
   mcpGithub: boolean;
   mcpFilesystem: boolean;
   mcpPostgres: boolean;
   mcpChromeDevtools: boolean;
 }
 
-export async function runWizard(projectDir: string): Promise<WizardAnswers> {
+export interface WizardAnswers {
+  selectedSkills: string[];
+  agents: AgentWizardSelection[];
+}
+
+export async function runWizard(projectDir: string, defaultAgentIds: string[] = []): Promise<WizardAnswers> {
   const detectedStack = await detectStack(projectDir);
   const availableSkills = await getAvailableSkills();
+  const selectedByDefault = new Set(defaultAgentIds.length > 0 ? defaultAgentIds : ['claude']);
 
   if (detectedStack) {
     console.log(`\n📦 Detected: ${detectedStack.name}`);
@@ -30,11 +34,19 @@ export async function runWizard(projectDir: string): Promise<WizardAnswers> {
 
   const answers = await inquirer.prompt([
     {
-      type: 'list',
-      name: 'agent',
-      message: 'Target AI agent:',
-      choices: getAgentChoices(),
-      default: 'claude',
+      type: 'checkbox',
+      name: 'selectedAgents',
+      message: 'Target AI agents:',
+      choices: getAgentChoices().map(agent => ({
+        ...agent,
+        checked: selectedByDefault.has(agent.value),
+      })),
+      validate: (value: string[]) => {
+        if (value.length === 0) {
+          return 'Select at least one agent.';
+        }
+        return true;
+      },
     },
     {
       type: 'checkbox',
@@ -48,64 +60,68 @@ export async function runWizard(projectDir: string): Promise<WizardAnswers> {
     },
   ]);
 
-  const agentConfig = getAgentConfig(answers.agent);
+  const selections: AgentWizardSelection[] = [];
 
-  let mcpAnswers = {
-    mcpGithub: false,
-    mcpFilesystem: false,
-    mcpPostgres: false,
-    mcpChromeDevtools: false,
-  };
+  for (const agentId of answers.selectedAgents as string[]) {
+    const agentConfig = getAgentConfig(agentId);
+    let mcpAnswers = {
+      mcpGithub: false,
+      mcpFilesystem: false,
+      mcpPostgres: false,
+      mcpChromeDevtools: false,
+    };
 
-  if (agentConfig.supportsMcp) {
-    const { configureMcp } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'configureMcp',
-        message: 'Configure MCP servers?',
-        default: detectedStack !== null,
-      },
-    ]);
-
-    if (configureMcp) {
-      const suggestPostgres = detectedStack?.name &&
-        ['laravel', 'symfony', 'django', 'fastapi', 'nextjs', 'node-api'].includes(detectedStack.name);
-
-      mcpAnswers = await inquirer.prompt([
+    if (agentConfig.supportsMcp) {
+      const { configureMcp } = await inquirer.prompt([
         {
           type: 'confirm',
-          name: 'mcpGithub',
-          message: 'GitHub MCP (PRs, issues, repo operations)?',
-          default: true,
-        },
-        {
-          type: 'confirm',
-          name: 'mcpPostgres',
-          message: 'Postgres MCP (database queries)?',
-          default: suggestPostgres,
-        },
-        {
-          type: 'confirm',
-          name: 'mcpFilesystem',
-          message: 'Filesystem MCP (advanced file operations)?',
-          default: false,
-        },
-        {
-          type: 'confirm',
-          name: 'mcpChromeDevtools',
-          message: 'Chrome Devtools MCP (inspect, debug, performance insights, analyze network requests)?',
-          default: false,
+          name: 'configureMcp',
+          message: `[${agentConfig.displayName}] Configure MCP servers?`,
+          default: detectedStack !== null,
         },
       ]);
+
+      if (configureMcp) {
+        const suggestPostgres = detectedStack?.name &&
+          ['laravel', 'symfony', 'django', 'fastapi', 'nextjs', 'node-api'].includes(detectedStack.name);
+
+        mcpAnswers = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'mcpGithub',
+            message: `[${agentConfig.displayName}] GitHub MCP (PRs, issues, repo operations)?`,
+            default: true,
+          },
+          {
+            type: 'confirm',
+            name: 'mcpPostgres',
+            message: `[${agentConfig.displayName}] Postgres MCP (database queries)?`,
+            default: suggestPostgres,
+          },
+          {
+            type: 'confirm',
+            name: 'mcpFilesystem',
+            message: `[${agentConfig.displayName}] Filesystem MCP (advanced file operations)?`,
+            default: false,
+          },
+          {
+            type: 'confirm',
+            name: 'mcpChromeDevtools',
+            message: `[${agentConfig.displayName}] Chrome Devtools MCP (inspect, debug, performance insights, analyze network requests)?`,
+            default: false,
+          },
+        ]);
+      }
     }
+
+    selections.push({
+      id: agentId,
+      ...mcpAnswers,
+    });
   }
 
-  const skillsDir = agentConfig.skillsDir;
-
   return {
-    agent: answers.agent,
-    skillsDir,
     selectedSkills: answers.selectedSkills,
-    ...mcpAnswers,
+    agents: selections,
   };
 }

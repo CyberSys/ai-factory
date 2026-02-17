@@ -13,7 +13,7 @@ AI Factory is a CLI tool and skill system that:
 
 ## Supported Agents
 
-AI Factory works with any AI coding agent. During `ai-factory init`, you choose your target agent and skills are installed to the correct directory with paths adapted automatically:
+AI Factory works with any AI coding agent. During `ai-factory init`, you choose one or more target agents and skills are installed to each agent's correct directory with paths adapted automatically:
 
 | Agent | Config Directory | Skills Directory |
 |-------|-----------------|-----------------|
@@ -43,7 +43,7 @@ npm install -g ai-factory
 # 2. Go to your project
 cd my-project
 
-# 3. Initialize — picks your agent, detects stack, installs skills
+# 3. Initialize — pick one or more agents, detect stack, install skills
 ai-factory init
 
 # 4. Open your AI agent (Claude Code, Cursor, etc.) and run:

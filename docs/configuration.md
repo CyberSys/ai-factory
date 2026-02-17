@@ -6,19 +6,35 @@
 
 ```json
 {
-  "version": "1.0.0",
-  "agent": "claude",
-  "skillsDir": ".claude/skills",
-  "installedSkills": ["ai-factory", "ai-factory-plan", "ai-factory-improve", "ai-factory-implement", "ai-factory-commit", "ai-factory-build-automation"],
-  "mcp": {
-    "github": true,
-    "postgres": false,
-    "filesystem": false
-  }
+  "version": "2.0.0",
+  "agents": [
+    {
+      "id": "claude",
+      "skillsDir": ".claude/skills",
+      "installedSkills": ["ai-factory", "ai-factory-plan", "ai-factory-improve", "ai-factory-implement", "ai-factory-commit", "ai-factory-build-automation"],
+      "mcp": {
+        "github": true,
+        "postgres": false,
+        "filesystem": false,
+        "chromeDevtools": false
+      }
+    },
+    {
+      "id": "codex",
+      "skillsDir": ".codex/skills",
+      "installedSkills": ["ai-factory", "ai-factory-plan", "ai-factory-implement"],
+      "mcp": {
+        "github": false,
+        "postgres": false,
+        "filesystem": false,
+        "chromeDevtools": false
+      }
+    }
+  ]
 }
 ```
 
-The `agent` field can be any supported agent ID: `claude`, `cursor`, `windsurf`, `roocode`, `kilocode`, `antigravity`, `opencode`, `warp`, `zencoder`, `codex`, `copilot`, `gemini`, `junie`, or `universal`. The `skillsDir` is set automatically based on the chosen agent.
+The `agents` array can include any supported agent IDs: `claude`, `cursor`, `windsurf`, `roocode`, `kilocode`, `antigravity`, `opencode`, `warp`, `zencoder`, `codex`, `copilot`, `gemini`, `junie`, or `universal`. Each agent keeps its own `skillsDir`, installed skills list, and MCP preferences.
 
 ## MCP Configuration
 
@@ -29,6 +45,7 @@ AI Factory can configure these MCP servers:
 | GitHub | PRs, issues, repo operations | `GITHUB_TOKEN` |
 | Postgres | Database queries | `DATABASE_URL` |
 | Filesystem | Advanced file operations | - |
+| Chrome Devtools | Browser inspection, debugging, performance | - |
 
 Configuration saved to agent's settings file (e.g. `.claude/settings.local.json` for Claude Code, `.cursor/mcp.json` for Cursor, `.roo/mcp.json` for Roo Code, `.kilocode/mcp.json` for Kilo Code, `opencode.json` for OpenCode, gitignored).
 
@@ -56,7 +73,7 @@ your-project/
 │   ├── DESCRIPTION.md         # Project specification
 │   ├── ARCHITECTURE.md        # Architecture decisions and guidelines
 │   ├── PLAN.md                # Current plan (from /ai-factory-plan fast)
-│   ├── SECURITY.md            # Ignored security items (from /security-checklist ignore)
+│   ├── SECURITY.md            # Ignored security items (from /ai-factory-security-checklist ignore)
 │   ├── changes/               # Plans from /ai-factory-plan full
 │   │   └── <branch-name>.md
 │   ├── patches/               # Self-improvement patches (from /ai-factory-fix)

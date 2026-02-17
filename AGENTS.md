@@ -312,7 +312,7 @@ To add support for a new AI coding agent:
 
 3. **Documentation** — update:
    - `docs/getting-started.md` — Supported Agents table
-   - `docs/configuration.md` — MCP support mention (if applicable), agent ID in `.ai-factory.json` docs
+   - `docs/configuration.md` — MCP support mention (if applicable), agent IDs/entries in `.ai-factory.json` docs
    - `README.md` — agent name in "Multi-agent support" bullet, Links section
 
 4. **`AGENTS.md`** — update Skills Location example if helpful

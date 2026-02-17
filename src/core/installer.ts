@@ -1,6 +1,6 @@
 import path from 'path';
 import { copyDirectory, getSkillsDir, ensureDir, listDirectories, readTextFile, writeTextFile } from '../utils/fs.js';
-import type { AiFactoryConfig } from './config.js';
+import type { AgentInstallation } from './config.js';
 import { getAgentConfig } from './agents.js';
 import { processSkillTemplates, buildTemplateVars, processTemplate } from './template.js';
 import { getTransformer } from './transformer.js';
@@ -99,16 +99,16 @@ export async function getAvailableTemplates(): Promise<string[]> {
   return listDirectories(templatesDir);
 }
 
-export async function updateSkills(config: AiFactoryConfig, projectDir: string): Promise<string[]> {
+export async function updateSkills(agentInstallation: AgentInstallation, projectDir: string): Promise<string[]> {
   const availableSkills = await getAvailableSkills();
-  const customSkills = config.installedSkills.filter(s => s.includes('/'));
+  const customSkills = agentInstallation.installedSkills.filter(s => s.includes('/'));
 
   const installedBaseSkills = await installSkills({
     projectDir,
-    skillsDir: config.skillsDir,
+    skillsDir: agentInstallation.skillsDir,
     skills: availableSkills,
     stack: null,
-    agentId: config.agent,
+    agentId: agentInstallation.id,
   });
 
   return [...installedBaseSkills, ...customSkills];
