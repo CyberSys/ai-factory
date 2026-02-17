@@ -20,10 +20,17 @@ Create a detailed, actionable implementation plan broken into trackable tasks.
 - Coding conventions
 - Non-functional requirements (logging, error handling)
 
+**ALSO:** Read `.ai-factory/ARCHITECTURE.md` if it exists to understand:
+- Chosen architecture pattern
+- Folder structure conventions
+- Layer/module boundaries
+- Dependency rules
+
 Use this context when:
 - Exploring codebase (know what patterns to look for)
 - Writing task descriptions (use correct technologies)
 - Planning file structure (follow project conventions)
+- **Follow architecture guidelines from `.ai-factory/ARCHITECTURE.md` when planning file structure and task organization**
 
 ### Step 0.1: Ensure Git & Determine Plan File
 

@@ -19,6 +19,11 @@ Start a new feature by creating a branch and planning implementation.
 - Project architecture
 - Existing conventions
 
+**ALSO:** Read `.ai-factory/ARCHITECTURE.md` if it exists to understand:
+- Architecture pattern and folder structure
+- Where new features should be placed
+- Module/layer boundaries and dependency rules
+
 This context informs branch naming, task planning, and implementation.
 
 ### Step 0.1: Ensure Git Repository
@@ -179,6 +184,7 @@ WORKTREE="../${DIRNAME}-<branch-name-with-hyphens>"
 
 # Project context
 cp .ai-factory/DESCRIPTION.md "${WORKTREE}/.ai-factory/DESCRIPTION.md" 2>/dev/null
+cp .ai-factory/ARCHITECTURE.md "${WORKTREE}/.ai-factory/ARCHITECTURE.md" 2>/dev/null
 
 # Past lessons / patches
 cp -r .ai-factory/patches/ "${WORKTREE}/.ai-factory/patches/" 2>/dev/null

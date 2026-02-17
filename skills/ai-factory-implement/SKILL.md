@@ -58,6 +58,12 @@ Based on choice:
 - Project architecture and conventions
 - Non-functional requirements
 
+**Read `.ai-factory/ARCHITECTURE.md`** if it exists to understand:
+- Chosen architecture pattern and folder structure
+- Dependency rules (what depends on what)
+- Layer/module boundaries and communication patterns
+- Follow these conventions when implementing — file placement, imports, module boundaries
+
 **Read all patches from `.ai-factory/patches/`** if the directory exists:
 - Use `Glob` to find all `*.md` files in `.ai-factory/patches/`
 - Read each patch to learn from past fixes and mistakes
@@ -177,6 +183,19 @@ If during implementation:
 ```
 
 This keeps .ai-factory/DESCRIPTION.md as the source of truth.
+
+**3.7.1: Update AGENTS.md and ARCHITECTURE.md if project structure changed**
+
+If during implementation:
+- New directories or modules were created
+- Project structure changed significantly (new `src/modules/`, new API routes directory, etc.)
+- New entry points or key files were added
+
+→ Update `AGENTS.md` — refresh the "Project Structure" tree and "Key Entry Points" table to reflect new directories/files.
+
+→ Update `.ai-factory/ARCHITECTURE.md` — if new modules or layers were added that should be documented in the folder structure section.
+
+**Only update if structure actually changed** — don't rewrite on every task. Check if new directories were created that aren't in the current structure map.
 
 **3.8: Check for commit checkpoint**
 
@@ -394,6 +413,7 @@ Shows progress without executing.
 - ✅ Mark tasks in_progress before starting
 - ✅ Mark tasks completed after finishing
 - ✅ Follow existing code conventions
+- ✅ Follow `/ai-factory-best-practices` guidelines (naming, structure, error handling)
 - ✅ Create files mentioned in task description
 - ✅ Handle edge cases mentioned in task
 - ✅ Stop and ask if task is unclear
@@ -405,79 +425,9 @@ Shows progress without executing.
 - ❌ Add tasks not in the plan
 - ❌ Skip tasks without user permission
 - ❌ Mark incomplete tasks as done
+- ❌ Violate `.ai-factory/ARCHITECTURE.md` conventions for file placement and module boundaries
 
-## Progress Display Format
-
-```
-┌─────────────────────────────────────────────┐
-│ Feature: User Authentication                │
-├─────────────────────────────────────────────┤
-│ ✅ #1 Create user model                     │
-│ ✅ #2 Add registration endpoint             │
-│ ✅ #3 Add login endpoint                    │
-│ 🔄 #4 Implement JWT generation    ← current │
-│ ⏳ #5 Add password reset                    │
-│ ⏳ #6 Add email verification                │
-├─────────────────────────────────────────────┤
-│ Progress: 3/6 (50%)                         │
-└─────────────────────────────────────────────┘
-```
-
-## Handling Blockers
-
-If a task cannot be completed:
-
-```
-⚠️ Blocker encountered on Task #4
-
-Issue: [Description of the problem]
-
-Options:
-1. Skip this task and continue (mark as blocked)
-2. Modify the task approach
-3. Stop implementation and discuss
-
-What would you like to do?
-```
-
-## Session Continuity
-
-Tasks are persisted in the conversation/project state.
-
-**Starting new session:**
-```
-User: /ai-factory-implement
-
-Claude: Resuming implementation...
-
-Found 3 completed tasks, 5 pending.
-Continuing from Task #4: Implement JWT generation
-
-[Executes task #4]
-```
-
-## Example Full Flow
-
-```
-Session 1:
-  /ai-factory-feature Add user authentication
-  → Creates branch: feature/user-authentication
-  → Asks about tests (No), logging (Verbose)
-  → /ai-factory-task creates 6 tasks
-  → Saves plan to: .ai-factory/features/feature-user-authentication.md
-  → /ai-factory-implement starts
-  → Completes tasks #1, #2, #3
-  → User ends session
-
-Session 2:
-  /ai-factory-implement
-  → Detects branch: feature/user-authentication
-  → Reads plan: .ai-factory/features/feature-user-authentication.md
-  → Loads state: 3/6 complete
-  → Continues from task #4
-  → Completes tasks #4, #5, #6
-  → All done, suggests /ai-factory-commit
-```
+For progress display format, blocker handling, session continuity examples, and full flow examples → see `references/IMPLEMENTATION-GUIDE.md`
 
 ## Critical Rules
 

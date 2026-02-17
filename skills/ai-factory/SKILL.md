@@ -151,6 +151,7 @@ Proceed? [Y/n]
 4. Generate custom skills via `/ai-factory-skill-generator` (pass URLs for Learn Mode when docs are available)
 5. Configure MCP in `{{settings_file}}`
 6. Generate `AGENTS.md` in project root (see [AGENTS.md Generation](#agentsmd-generation))
+7. Generate architecture document via `/ai-factory-architecture` (see [Architecture Generation](#architecture-generation))
 
 ---
 
@@ -251,7 +252,7 @@ Based on confirmed stack:
 
 **Step 4: Setup Context**
 
-Install skills, configure MCP, and generate `AGENTS.md` as in Mode 1.
+Install skills, configure MCP, generate `AGENTS.md`, and generate architecture document via `/ai-factory-architecture` as in Mode 1.
 
 ---
 
@@ -284,7 +285,7 @@ Same as Mode 2.
 
 **Step 4: Setup Context**
 
-Install skills, configure MCP, and generate `AGENTS.md` as in Mode 1.
+Install skills, configure MCP, generate `AGENTS.md`, and generate architecture document via `/ai-factory-architecture` as in Mode 1.
 
 ---
 
@@ -379,6 +380,7 @@ Install skills, configure MCP, and generate `AGENTS.md` as in Mode 1.
 |------|---------|
 | AGENTS.md | This file — project structure map |
 | .ai-factory/DESCRIPTION.md | Project specification and tech stack |
+| .ai-factory/ARCHITECTURE.md | Architecture decisions and guidelines |
 | CLAUDE.md | Claude Code instructions and preferences |
 ```
 
@@ -402,12 +404,19 @@ Install skills, configure MCP, and generate `AGENTS.md` as in Mode 1.
 
 **This skill ONLY sets up context (skills + MCP). It does NOT implement the project.**
 
-After completing setup, tell the user:
+After DESCRIPTION.md, AGENTS.md, skills, and MCP are configured, **generate the architecture document**:
+
+**Step 7: Generate Architecture Document**
+
+Invoke `/ai-factory-architecture` to define project architecture. This creates `.ai-factory/ARCHITECTURE.md` with architecture pattern, folder structure, dependency rules, and code examples tailored to the project.
+
+Then tell the user:
 
 ```
 ✅ Project context configured!
 
 Project description: .ai-factory/DESCRIPTION.md
+Architecture: .ai-factory/ARCHITECTURE.md
 Project map: AGENTS.md
 Skills installed: [list]
 MCP configured: [list]

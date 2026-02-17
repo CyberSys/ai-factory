@@ -132,15 +132,30 @@ Analyzes your project and sets up context:
 - Searches [skills.sh](https://skills.sh) for relevant skills
 - Generates custom skills via `/ai-factory-skill-generator`
 - Configures MCP servers
+- Generates architecture document via `/ai-factory-architecture`
 
 When called with a description:
 ```
 /ai-factory e-commerce platform with Stripe and Next.js
 ```
 - Creates `.ai-factory/DESCRIPTION.md` with enhanced project specification
+- Creates `.ai-factory/ARCHITECTURE.md` with architecture decisions and guidelines
 - Transforms your idea into a structured, professional description
 
 **Does NOT implement your project** - only sets up context.
+
+### `/ai-factory-architecture [clean|ddd|microservices|monolith|layers]`
+Generates architecture guidelines tailored to your project:
+```
+/ai-factory-architecture           # Analyze project and recommend
+/ai-factory-architecture clean     # Use Clean Architecture
+/ai-factory-architecture monolith  # Use Modular Monolith
+```
+- Reads `.ai-factory/DESCRIPTION.md` for project context
+- Recommends architecture pattern based on team size, domain complexity, and tech stack
+- Generates `.ai-factory/ARCHITECTURE.md` with folder structure, dependency rules, code examples
+- All examples adapted to your project's language and framework
+- Called automatically by `/ai-factory` during setup, but can also be used standalone
 
 ### `/ai-factory-docs [--web]`
 Generates and maintains project documentation:

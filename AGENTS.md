@@ -49,6 +49,7 @@ ai-factory/
 ### Working Directory
 All AI Factory files in user projects go to `.ai-factory/`:
 - `.ai-factory/DESCRIPTION.md` - project specification
+- `.ai-factory/ARCHITECTURE.md` - architecture decisions and guidelines
 - `.ai-factory/PLAN.md` - task plan (from /ai-factory-task)
 - `.ai-factory/features/feature-*.md` - feature plans (from /ai-factory-feature)
 
@@ -80,11 +81,13 @@ Check: has arguments? has project files?
 │   → Ask "What are you building?" → Stack selection → Setup  │
 └─────────────────────────────────────────────────────────────┘
     ↓
+/ai-factory-architecture → Generate ARCHITECTURE.md
+    ↓
 STOP (does NOT implement)
 
 /ai-factory-feature <description>
     ↓
-Reads .ai-factory/DESCRIPTION.md for context
+Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
     ↓
 Creates git branch (feature/xxx)
     ↓
@@ -94,7 +97,7 @@ Calls /ai-factory-task → creates .ai-factory/features/feature-xxx.md
 
 /ai-factory-task <description>
     ↓
-Reads .ai-factory/DESCRIPTION.md for context
+Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
     ↓
 Explores codebase
     ↓
@@ -106,7 +109,7 @@ For 5+ tasks: includes commit checkpoints
 
 /ai-factory-implement
     ↓
-Reads .ai-factory/DESCRIPTION.md for context
+Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
     ↓
 Finds plan file (PLAN.md or branch-named)
     ↓
@@ -199,6 +202,7 @@ ai-factory update
 5. **Verbose logging required** - all implementations must have configurable logging
 6. **No tests unless asked** - respect user's testing preference
 7. **Commit checkpoints** - for plans with 5+ tasks
+8. **ARCHITECTURE.md is architecture source of truth** - all skills follow its folder structure and dependency rules
 
 ## Documentation Structure
 

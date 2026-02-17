@@ -15,8 +15,10 @@ AI Factory provides a set of **workflow skills** that form the core development 
   │              │      │    claude    │      │                          │
   │ ai-factory   │ ───▶ │ (or any AI   │ ───▶ │      /ai-factory         │
   │    init      │      │    agent)    │      │   (setup context)        │
-  │              │      │              │      │                          │
-  └──────────────┘      └──────────────┘      └────────────┬─────────────┘
+  │              │      │              │      │          ↓               │
+  └──────────────┘      └──────────────┘      │  /ai-factory-architecture│
+                                              │  (ARCHITECTURE.md)       │
+                                              └────────────┬─────────────┘
                                                            │
                           ┌────────────────────────────────┼────────────────┐
                           │                                │                │

@@ -55,6 +55,7 @@ your-project/
 │   └── settings.local.json    # MCP config (Claude/Cursor, gitignored)
 ├── .ai-factory/               # AI Factory working directory
 │   ├── DESCRIPTION.md         # Project specification
+│   ├── ARCHITECTURE.md        # Architecture decisions and guidelines
 │   ├── PLAN.md                # Current plan (from /ai-factory-task)
 │   ├── SECURITY.md            # Ignored security items (from /security-checklist ignore)
 │   ├── features/              # Feature plans (from /ai-factory-feature)
