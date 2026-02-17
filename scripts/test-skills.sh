@@ -35,16 +35,22 @@ fail() {
 # ─────────────────────────────────────────────
 echo -e "\n${BOLD}=== Validate all skills ===${NC}\n"
 
+SKILL_WARNINGS=0
 for skill_dir in "$ROOT_DIR"/skills/ai-factory*/; do
     skill_name=$(basename "$skill_dir")
-    if bash "$VALIDATOR" "$skill_dir" > /dev/null 2>&1; then
-        pass "$skill_name"
-    else
+    OUTPUT=$(bash "$VALIDATOR" "$skill_dir" 2>&1)
+    EXIT_CODE=$?
+    WARNS=$(echo "$OUTPUT" | grep -c 'WARNING' || true)
+    if [[ $EXIT_CODE -ne 0 ]]; then
         fail "$skill_name"
-        # Re-run to show errors
+        echo "$OUTPUT" | grep -E 'ERROR|WARNING' | sed 's/^/      /'
         echo ""
-        bash "$VALIDATOR" "$skill_dir" 2>&1 | grep -E 'ERROR|WARNING' | sed 's/^/      /'
-        echo ""
+    elif [[ $WARNS -gt 0 ]]; then
+        pass "$skill_name ${YELLOW}($WARNS warnings)${NC}"
+        echo "$OUTPUT" | grep 'WARNING' | sed "s/^/      /"
+        SKILL_WARNINGS=$((SKILL_WARNINGS + WARNS))
+    else
+        pass "$skill_name"
     fi
 done
 
@@ -204,9 +210,10 @@ fi
 # Summary
 # ─────────────────────────────────────────────
 echo -e "\n${BOLD}=== Results ===${NC}"
-echo -e "  Total:  $TOTAL"
-echo -e "  Passed: ${GREEN}$PASSED${NC}"
-echo -e "  Failed: ${RED}$FAILED${NC}"
+echo -e "  Total:    $TOTAL"
+echo -e "  Passed:   ${GREEN}$PASSED${NC}"
+echo -e "  Failed:   ${RED}$FAILED${NC}"
+echo -e "  Warnings: ${YELLOW}$SKILL_WARNINGS${NC}"
 
 if [[ $FAILED -gt 0 ]]; then
     echo -e "\n${RED}TESTS FAILED${NC}\n"
