@@ -64,6 +64,11 @@ Based on choice:
 - Layer/module boundaries and communication patterns
 - Follow these conventions when implementing — file placement, imports, module boundaries
 
+**Read `.ai-factory/RULES.md`** if it exists:
+- These are project-specific rules and conventions added by the user
+- **ALWAYS follow these rules** when implementing — they override general patterns
+- Rules are short, actionable — treat each as a hard requirement
+
 **Read all patches from `.ai-factory/patches/`** if the directory exists:
 - Use `Glob` to find all `*.md` files in `.ai-factory/patches/`
 - Read each patch to learn from past fixes and mistakes

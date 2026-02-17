@@ -2,27 +2,61 @@
 
 # Development Workflow
 
-AI Factory provides a set of **workflow skills** that form the core development loop: roadmap, plan, improve, implement, fix, evolve. Each skill is a step in the pipeline — they connect to each other and share context through plan files and patches.
+AI Factory has two phases: **configuration** (one-time project setup) and the **development workflow** (repeatable loop of plan → implement → verify → commit → evolve).
+
+## Project Configuration
+
+Run once per project. Sets up context files that all workflow skills depend on.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       PROJECT CONFIGURATION                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐
+  │              │      │   claude     │      │                          │
+  │ ai-factory   │ ───▶ │ (or any AI   │ ───▶ │      /ai-factory         │
+  │    init      │      │    agent)    │      │   (setup context)        │
+  │              │      │              │      │                          │
+  └──────────────┘      └──────────────┘      │  DESCRIPTION.md          │
+                                              │  AGENTS.md               │
+                                              │  Skills + MCP configured │
+                                              └────────────┬─────────────┘
+                                                           │
+                                                           ▼
+                                              ┌──────────────────────────┐
+                                              │ /ai-factory-architecture │
+                                              │  (ARCHITECTURE.md)       │
+                                              └────────────┬─────────────┘
+                                                           │
+                                         ┌─────────────────┼─────────────────┐
+                                         │                 │                 │
+                                         ▼                 ▼                 ▼
+                                  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐
+                                  │/ai-factory- │  │ /ai-factory- │  │/ai-factory- │
+                                  │   rules     │  │   roadmap    │  │   docs      │
+                                  │ (optional)  │  │(recommended) │  │ (optional)  │
+                                  └─────────────┘  └──────────────┘  └─────────────┘
+
+                                  ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
+                                  │ /ai-factory- │  │/ai-factory- │  │ /ai-factory- │
+                                  │  dockerize   │  │    ci       │  │    build-    │
+                                  │ (optional)   │  │ (optional)  │  │  automation  │
+                                  └──────────────┘  └─────────────┘  │ (optional)   │
+                                                                     └──────────────┘
+```
+
+## Development Workflow
+
+The repeatable development loop. Each skill feeds into the next, sharing context through plan files and patches.
 
 ![workflow](https://github.com/lee-to/ai-factory/raw/main/art/workflow.png)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         AI FACTORY WORKFLOW                             │
+│                       DEVELOPMENT WORKFLOW                               │
 └─────────────────────────────────────────────────────────────────────────┘
 
-  ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐
-  │              │      │    claude    │      │                          │
-  │ ai-factory   │ ───▶ │ (or any AI   │ ───▶ │      /ai-factory         │
-  │    init      │      │    agent)    │      │   (setup context)        │
-  │              │      │              │      │          ↓               │
-  └──────────────┘      └──────────────┘      │  /ai-factory-architecture│
-                                              │  (ARCHITECTURE.md)       │
-                                              └────────────┬─────────────┘
-                                                           │
-                          ┌────────────────────────────────┼────────────────┐
-                          │                                │                │
-                          ▼                                ▼                ▼
                ┌──────────────────┐            ┌─────────────────┐  ┌──────────────┐
                │                  │            │                 │  │              │
                │ /ai-factory-task │            │ /ai-factory-    │  │ /ai-factory- │

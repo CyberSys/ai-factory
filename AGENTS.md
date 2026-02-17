@@ -7,7 +7,7 @@
 **AI Factory** (v2) is an npm package + skill system that automates AI agent context setup for projects. It provides:
 
 1. **CLI tool** (`ai-factory init/update/upgrade`) — installs skills and configures MCP
-2. **Built-in skills** (18 skills, all `ai-factory-*` prefixed) — workflow commands for spec-driven development
+2. **Built-in skills** (19 skills, all `ai-factory-*` prefixed) — workflow commands for spec-driven development
 3. **Spec-driven workflow** — structured approach: plan → implement → commit
 4. **Multi-agent support** — 14 agents (Claude Code, Cursor, Windsurf, Roo Code, Kilo Code, Antigravity, OpenCode, Warp, Zencoder, Codex CLI, GitHub Copilot, Gemini CLI, Junie, Universal)
 
@@ -39,6 +39,7 @@ ai-factory/
 │   ├── ai-factory-improve/            # Plan refinement (second iteration)
 │   ├── ai-factory-review/             # Code review
 │   ├── ai-factory-roadmap/            # Strategic project roadmap
+│   ├── ai-factory-rules/              # Project rules and conventions
 │   ├── ai-factory-security-checklist/ # Security audit
 │   ├── ai-factory-skill-generator/    # Generate new skills
 │   ├── ai-factory-task/               # Create implementation plan
@@ -71,6 +72,7 @@ All skills use `ai-factory-` prefix (v1 used bare names like `commit`, `feature`
 - `/ai-factory-task`
 - `/ai-factory-implement`
 - `/ai-factory-roadmap`
+- `/ai-factory-rules`
 - `/ai-factory-commit`
 - `/ai-factory-docs`
 - etc.

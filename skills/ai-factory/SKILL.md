@@ -451,6 +451,7 @@ Ready when you are!
 Your project already has code. You might also want to set up:
 
 - /ai-factory-docs — Generate project documentation
+- /ai-factory-rules — Add project-specific rules and conventions
 - /ai-factory-build-automation — Configure build scripts and automation
 - /ai-factory-ci — Set up CI/CD pipeline
 - /ai-factory-dockerize — Containerize the project

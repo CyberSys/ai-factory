@@ -289,6 +289,17 @@ Generates, enhances, or audits CI/CD pipeline configuration:
 
 After completion, suggests `/ai-factory-build-automation` and `/ai-factory-dockerize`.
 
+### `/ai-factory-rules [rule text]`
+Adds project-specific rules and conventions:
+```
+/ai-factory-rules Always use DTO instead of arrays
+/ai-factory-rules                                    # Interactive — asks what to add
+```
+- Rules are saved to `.ai-factory/RULES.md`
+- Each invocation appends a new rule
+- Rules are automatically loaded by `/ai-factory-implement` before task execution
+- Use for coding conventions, naming rules, architectural constraints
+
 ### `/ai-factory-commit`
 Creates conventional commits:
 - Analyzes staged changes
