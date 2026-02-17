@@ -77,3 +77,11 @@ export async function writeTextFile(filePath: string, content: string): Promise<
 export async function ensureDir(dirPath: string): Promise<void> {
   await fs.ensureDir(dirPath);
 }
+
+export async function removeDirectory(dirPath: string): Promise<void> {
+  await fs.remove(dirPath);
+}
+
+export async function removeFile(filePath: string): Promise<void> {
+  await fs.remove(filePath);
+}
