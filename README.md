@@ -1,5 +1,4 @@
 ![logo](https://github.com/lee-to/ai-factory/raw/2.x/art/promo.png)
-![logo](https://github.com/lee-to/ai-factory/raw/2.x/art/promo.png)
 
 # AI Factory
 
