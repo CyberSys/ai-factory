@@ -7,7 +7,7 @@
 **AI Factory** (v2) is an npm package + skill system that automates AI agent context setup for projects. It provides:
 
 1. **CLI tool** (`ai-factory init/update/upgrade`) — installs skills and configures MCP
-2. **Built-in skills** (19 skills, all `aif-*` prefixed) — workflow commands for spec-driven development
+2. **Built-in skills** (21 skills, all `aif-*` prefixed) — workflow commands for spec-driven development
 3. **Spec-driven workflow** — structured approach: plan → implement → commit
 4. **Multi-agent support** — 14 agents (Claude Code, Cursor, Windsurf, Roo Code, Kilo Code, Antigravity, OpenCode, Warp, Zencoder, Codex CLI, GitHub Copilot, Gemini CLI, Junie, Universal)
 
@@ -36,6 +36,7 @@ ai-factory/
 │   ├── aif-fix/                # Quick bug fixes (no plans)
 │   ├── aif-implement/          # Execute plan tasks
 │   ├── aif-improve/            # Plan refinement (second iteration)
+│   ├── aif-loop/               # Iterative reflex loop with quality gates
 │   ├── aif-plan/               # Plan implementation (fast/full modes)
 │   ├── aif-review/             # Code review
 │   ├── aif-roadmap/            # Strategic project roadmap
@@ -63,6 +64,10 @@ All AI Factory files in user projects go to `.ai-factory/`:
 - `.ai-factory/ARCHITECTURE.md` — architecture decisions and guidelines
 - `.ai-factory/PLAN.md` — task plan (from /aif-plan fast)
 - `.ai-factory/plans/<branch>.md` — plans (from /aif-plan full)
+- `.ai-factory/evolution/current.json` — active loop pointer (from /aif-loop)
+- `.ai-factory/evolution/<alias>/run.json` — current loop state
+- `.ai-factory/evolution/<alias>/history.jsonl` — loop event history (append-only)
+- `.ai-factory/evolution/<alias>/artifact.md` — latest loop artifact output
 
 ### Skill Naming (v2)
 All skills use `aif-` prefix (v1 used bare names like `commit`, `feature`):
@@ -121,6 +126,24 @@ Explores codebase
 Creates tasks with TaskCreate
     ↓
 For 5+ tasks: includes commit checkpoints
+
+/aif-loop [new|resume|status|stop|list|history|clean]
+    ↓
+Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md + RULES.md for context
+    ↓
+Creates/loads .ai-factory/evolution/current.json
+    ↓
+Creates/loads .ai-factory/evolution/<alias>/run.json + history.jsonl + artifact.md
+    ↓
+Always asks explicit confirmation for success criteria and max iterations before iteration 1 (even if included in task prompt)
+    ↓
+Runs 6 phases: PLAN → PRODUCE||PREPARE → EVALUATE → CRITIQUE → REFINE
+    ↓
+PRODUCE and PREPARE run in parallel (Task tool); EVALUATE runs check groups in parallel
+    ↓
+Stops on: quality threshold, no major issues, stagnation, or max iterations (default 4)
+    ↓
+If stopped by max iterations without meeting criteria, final summary shows distance-to-success (score/threshold gap + remaining blocking fail rules)
 
 /aif-implement
     ↓
@@ -245,6 +268,7 @@ README.md                    # Landing page (~105 lines) — first impression, i
 docs/
 ├── getting-started.md       # What is AI Factory, supported agents table, first project walkthrough, CLI
 ├── workflow.md              # Workflow diagram, "When to Use What" table, workflow skills overview
+├── loop.md                  # Reflex loop protocol: phases, rules, state, stop conditions
 ├── skills.md                # Full reference: Workflow Skills + Utility Skills
 ├── plan-files.md            # Plan files, self-improvement patches, skill acquisition strategy
 ├── security.md              # Two-level security scanning system
@@ -257,7 +281,7 @@ docs/
 2. **Details go to `docs/`.** Each file is self-contained — one topic, one page. A user should be able to read a single doc file and get the full picture on that topic.
 3. **No duplication.** If information lives in `docs/`, README links to it — does not repeat it. The only exception: installation command appears in both README and `docs/getting-started.md` (users expect it in README).
 4. **Navigation.** Every docs/ file starts with `[← Back to README](../README.md)` and ends with a "See Also" section linking to 2-3 related pages. `getting-started.md` has "Next Steps" instead.
-5. **Workflow skills vs utility skills.** `docs/workflow.md` describes the workflow skills (plan, improve, implement, fix, evolve) with concise 1-paragraph overviews. `docs/skills.md` has the full reference for ALL skills, split into "Workflow Skills" and "Utility Skills" sections.
+5. **Workflow skills vs utility skills.** `docs/workflow.md` describes the workflow skills (plan, loop, improve, implement, fix, evolve) with concise overviews. `docs/loop.md` is the source of truth for Reflex Loop contracts and state transitions. `docs/skills.md` has the full reference for ALL skills, split into "Workflow Skills" and "Utility Skills" sections.
 6. **Cross-links use relative paths.** From README: `docs/workflow.md`. Between docs: `workflow.md` (same directory).
 
 ### When to Update What

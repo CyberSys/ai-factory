@@ -63,6 +63,31 @@ Refine an existing plan with a second iteration:
 - Shows improvement report and asks for approval before applying
 - If no plan found — suggests running `/aif-plan` first
 
+### `/aif-loop [new|resume|status|stop|list|history|clean] [task or alias]`
+Runs a strict iterative Reflex Loop with phase-based execution and quality gates:
+```
+/aif-loop new OpenAPI 3.1 + DDD notes + JSON examples + PHP controller
+/aif-loop resume
+/aif-loop status
+/aif-loop stop
+/aif-loop list
+/aif-loop history courses-api-ddd
+/aif-loop clean courses-api-ddd
+```
+- Uses 6 phases: PLAN -> PRODUCE||PREPARE -> EVALUATE -> CRITIQUE -> REFINE (PRODUCE and PREPARE run in parallel)
+- Evaluation uses weighted rules with score formula and severity levels (`fail`, `warn`, `info`)
+- Persists state between sessions in `.ai-factory/evolution/`:
+  - `current.json` (active loop pointer to current run)
+  - `<alias>/run.json` (single source of truth for current state)
+  - `<alias>/history.jsonl` (append-only event log)
+  - `<alias>/artifact.md` (latest artifact output)
+- `list` shows all loop runs, `history` shows event timeline, `clean` removes stopped/completed/failed loop runs
+- Default `max_iterations` is `4`
+- Before iteration 1, always explicitly confirms success criteria and max iterations with the user (even if already provided in task text)
+- Stops on threshold reached, no major issues, iteration limit, stagnation, or explicit user stop
+- If stopped by `iteration_limit` with unmet criteria, final summary includes distance-to-success (threshold gap + remaining fail-rule blockers)
+- Full protocol and schemas: [Reflex Loop](loop.md)
+
 ### `/aif-implement`
 Executes the plan:
 ```
@@ -344,3 +369,9 @@ Each category includes a checklist, vulnerable/safe code examples (TypeScript, P
 - Asks for a reason, saves to `.ai-factory/SECURITY.md`
 - Future audits skip these items but still show them in an **"Ignored Items"** section for transparency
 - Review ignored items periodically — risks change over time
+
+## See Also
+
+- [Development Workflow](workflow.md) — how workflow skills connect end-to-end
+- [Reflex Loop](loop.md) — strict loop protocol for iterative quality gating
+- [Plan Files](plan-files.md) — where workflow artifacts are stored

@@ -78,10 +78,27 @@ your-project/
 │   │   └── <branch-name>.md
 │   ├── patches/               # Self-improvement patches (from /aif-fix)
 │   │   └── 2026-02-07-14.30.md
-│   └── evolutions/            # Evolution logs (from /aif-evolve)
-│       └── 2026-02-08-10.00.md
+│   ├── evolutions/            # Evolution logs (from /aif-evolve)
+│   │   └── 2026-02-08-10.00.md
+│   └── evolution/             # Active reflex loop state (from /aif-loop)
+│       ├── current.json
+│       └── <task-alias>/
+│           ├── run.json
+│           ├── history.jsonl
+│           └── artifact.md
 └── .ai-factory.json           # AI Factory config
 ```
+
+## Reflex Loop Files
+
+`/aif-loop` keeps state lean and resumable between sessions:
+
+- `.ai-factory/evolution/current.json` — active loop pointer (to current run)
+- `.ai-factory/evolution/<task-alias>/run.json` — current run snapshot (loop execution state)
+- `.ai-factory/evolution/<task-alias>/history.jsonl` — append-only event history
+- `.ai-factory/evolution/<task-alias>/artifact.md` — latest artifact output
+
+For full phase contracts and stop conditions, see [Reflex Loop](loop.md).
 
 ## Best Practices
 
@@ -105,4 +122,5 @@ All implementations include verbose, configurable logging:
 
 - [Getting Started](getting-started.md) — installation, supported agents, first project
 - [Development Workflow](workflow.md) — how to use the workflow skills
+- [Reflex Loop](loop.md) — contracts and storage layout for `/aif-loop`
 - [Security](security.md) — how external skills are scanned before use

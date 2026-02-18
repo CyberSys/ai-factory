@@ -1,4 +1,4 @@
-[← Getting Started](getting-started.md) · [Back to README](../README.md) · [Core Skills →](skills.md)
+[← Getting Started](getting-started.md) · [Back to README](../README.md) · [Reflex Loop →](loop.md)
 
 # Development Workflow
 
@@ -146,6 +146,7 @@ The repeatable development loop. Each skill feeds into the next, sharing context
 | `/aif-plan full` | Full features, stories, epics | Yes | `.ai-factory/plans/<branch>.md` |
 | `/aif-plan full --parallel` | Concurrent features via worktrees | Yes + worktree | Autonomous end-to-end |
 | `/aif-improve` | Refine plan before implementation | No | No (improves existing) |
+| `/aif-loop` | Iterative generation with quality gates and phase-based cycles | No | No (uses `.ai-factory/evolution/`) |
 | `/aif-fix` | Bug fixes, errors, hotfixes | No | Optional (`.ai-factory/FIX_PLAN.md`) |
 | `/aif-verify` | Post-implementation quality check | No | No (reads existing) |
 
@@ -182,6 +183,21 @@ Two modes — **fast** (no branch, saves to `.ai-factory/PLAN.md`) and **full** 
 ```
 
 Second-pass analysis. Finds missing tasks (migrations, configs, middleware), fixes dependencies, removes redundant work. Shows a diff-like report before applying changes.
+
+### `/aif-loop [new|resume|status|stop|list|history|clean] [task or alias]` — iterative quality loop
+
+```
+/aif-loop new OpenAPI 3.1 + DDD notes + JSON examples + PHP controller
+/aif-loop resume
+/aif-loop status
+/aif-loop list
+/aif-loop history courses-api-ddd
+/aif-loop clean courses-api-ddd
+```
+
+Runs a strict Reflex Loop with 6 phases: PLAN -> PRODUCE||PREPARE -> EVALUATE -> CRITIQUE -> REFINE. PRODUCE and PREPARE run in parallel via `Task` tool; EVALUATE runs check groups in parallel. Before iteration 1, it always asks for explicit confirmation of success criteria and max iterations (even if both are already in task text). Keeps one active loop pointer in `.ai-factory/evolution/current.json` and per-task run state in `.ai-factory/evolution/<alias>/run.json` with append-only events in `history.jsonl` and latest output in `artifact.md`. Stops on threshold reached, no major issues, stagnation, or max iterations (default: 4). If loop stops on max iterations without passing criteria, final summary includes distance-to-success metrics (threshold gap + remaining blocking fail-rules). Use `list` to see all loop runs, `history` to view events, `clean` to remove old loop runs.
+
+For full contracts and state transition rules, see [Reflex Loop](loop.md).
 
 ### `/aif-implement` — execute the plan
 
@@ -238,3 +254,9 @@ For full details on all skills including utility commands (`/aif-docs`, `/aif-do
 - **Resumable sessions** - progress saved in plan files, continue anytime
 - **Commit discipline** - structured commits at logical checkpoints
 - **No scope creep** - AI does exactly what's in the plan, nothing more
+
+## See Also
+
+- [Reflex Loop](loop.md) — strict iterative loop contracts and state transitions
+- [Core Skills](skills.md) — detailed reference for all workflow and utility skills
+- [Plan Files](plan-files.md) — how plan artifacts are stored and managed

@@ -71,5 +71,6 @@ ai-factory upgrade
 ## Next Steps
 
 - [Development Workflow](workflow.md) — understand the full flow from plan to commit
+- [Reflex Loop](loop.md) — run iterative generate → evaluate → critique → refine cycles
 - [Core Skills](skills.md) — all available slash commands
 - [Configuration](configuration.md) — customize `.ai-factory.json` and MCP servers

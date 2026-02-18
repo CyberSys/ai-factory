@@ -125,6 +125,7 @@ AI Factory can generate and maintain your project docs with a single command:
 |-------|-------------|
 | [Getting Started](docs/getting-started.md) | What is AI Factory, supported agents, CLI commands |
 | [Development Workflow](docs/workflow.md) | Workflow diagram, when to use what, spec-driven approach |
+| [Reflex Loop](docs/loop.md) | Iterative generate → evaluate → critique → refine workflow |
 | [Core Skills](docs/skills.md) | All slash commands — feature, task, fix, implement, evolve, docs, and more |
 | [Plan Files](docs/plan-files.md) | Plan files, self-improvement patches, skill acquisition |
 | [Security](docs/security.md) | Two-level security scanning for external skills |
