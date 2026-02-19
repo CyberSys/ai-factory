@@ -58,15 +58,22 @@ From here, AI Factory creates a branch, builds a plan, and you run `/aif-impleme
 ## CLI Commands
 
 ```bash
+# Update npm package to latest version
+npm install -g ai-factory@latest
+
 # Initialize project
 ai-factory init
 
 # Update skills to latest version
 ai-factory update
 
-# Upgrade from v1 to v2 (removes old bare-named skills, installs aif-* prefixed)
+# Migrate existing skills from v1 naming to v2 naming
 ai-factory upgrade
 ```
+
+For v1 -> v2 migration, run both commands in order:
+1. `npm install -g ai-factory@latest`
+2. `ai-factory upgrade`
 
 ## Next Steps
 
