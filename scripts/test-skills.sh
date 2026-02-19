@@ -201,8 +201,8 @@ else
     fail "found $DOTTED_NAMES dotted name: fields in skills/"
 fi
 
-# No dotted /aif. invocations in markdown
-DOTTED_REFS=$(grep -rE '/aif\.[a-z]' "$ROOT_DIR/skills/" "$ROOT_DIR/docs/" "$ROOT_DIR/README.md" "$ROOT_DIR/AGENTS.md" --include='*.md' 2>/dev/null | grep -v 'ai-factory\.json' | wc -l | tr -d ' ' || true)
+# No dotted /aif. invocations in markdown (slash-command context only, not URLs)
+DOTTED_REFS=$(grep -rE "(^|[[:space:]\`\"(>])/aif\\.[a-z]" "$ROOT_DIR/skills/" "$ROOT_DIR/docs/" "$ROOT_DIR/README.md" "$ROOT_DIR/AGENTS.md" --include='*.md' 2>/dev/null | grep -v 'ai-factory\.json' | wc -l | tr -d ' ' || true)
 if [[ "$DOTTED_REFS" -eq 0 ]]; then
     pass "no dotted /aif.xxx invocations in docs"
 else
