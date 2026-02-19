@@ -15,7 +15,7 @@ Run once per project. Sets up context files that all workflow skills depend on.
 
   ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐
   │              │      │   claude     │      │                          │
-  │ ai-factory   │ ───▶ │ (or any AI   │ ───▶ │      /aif         │
+  │ ai-factory   │ ───▶ │ (or any AI   │ ───▶│      /aif                │
   │    init      │      │    agent)    │      │   (setup context)        │
   │              │      │              │      │                          │
   └──────────────┘      └──────────────┘      │  DESCRIPTION.md          │
@@ -25,25 +25,23 @@ Run once per project. Sets up context files that all workflow skills depend on.
                                                            │
                                                            ▼
                                               ┌──────────────────────────┐
-                                              │ /aif-architecture │
+                                              │ /aif-architecture        │
                                               │  (ARCHITECTURE.md)       │
                                               └────────────┬─────────────┘
                                                            │
                                          ┌─────────────────┼─────────────────┐
                                          │                 │                 │
                                          ▼                 ▼                 ▼
-                                  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐
-                                  │/aif- │  │ /aif- │  │/aif- │
-                                  │   rules     │  │   roadmap    │  │   docs      │
-                                  │ (optional)  │  │(recommended) │  │ (optional)  │
-                                  └─────────────┘  └──────────────┘  └─────────────┘
+                                  ┌───────────────┐  ┌──────────────┐  ┌─────────────┐
+                                  │ /aif-rules    │  │ /aif-roadmap │  │  /aif-docs  │
+                                  │ (optional)    │  │(recommended) │  │ (optional)  │
+                                  └───────────────┘  └──────────────┘  └─────────────┘
 
-                                  ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
-                                  │ /aif- │  │/aif- │  │ /aif- │
-                                  │  dockerize   │  │    ci       │  │    build-    │
-                                  │ (optional)   │  │ (optional)  │  │  automation  │
-                                  └──────────────┘  └─────────────┘  │ (optional)   │
-                                                                     └──────────────┘
+                                  ┌───────────────┐  ┌──────────────┐  ┌──────────────┐
+                                  │ /aif-dockerize│  │  /aif-ci     │  │ /aif-build-  │
+                                  │ (optional)    │  │ (optional)   │  │  automation  │
+                                  └───────────────┘  └──────────────┘  │ (optional)   │
+                                                                       └──────────────┘
 ```
 
 ## Development Workflow
@@ -59,12 +57,12 @@ The repeatable development loop. Each skill feeds into the next, sharing context
 
                ┌──────────────────────────┐                         ┌──────────────┐
                │                          │                         │              │
-               │    /aif-plan      │                         │ /aif- │
-               │                          │                         │    fix       │
+               │    /aif-plan             │                         │ /aif-fix     │
+               │                          │                         │              │
                │  fast → no branch,       │                         │              │
                │         PLAN.md          │                         │ Bug fixes    │
                │  full → git branch,      │                         │ Optional plan│
-               │         plans/<br>.md  │                         │ With logging │
+               │         plans/<br>.md    │                         │ With logging │
                │                          │                         │              │
                └────────────┬─────────────┘                         └───────┬──────┘
                             │                                               │
@@ -73,12 +71,12 @@ The repeatable development loop. Each skill feeds into the next, sharing context
                             │                                      │ .ai-factory/     │
                             │                                      │   patches/       │
                             │                                      │ Self-improvement │
-                            └───────────────┬──────────────────────└────────┬─────────┘
+                            └───────────┬──────────────────────────└────────┬─────────┘
                                         │                                   │
                                         ▼                                   │
                              ┌─────────────────────┐                        │
                              │                     │                        │
-                             │ /aif-improve │                        │
+                             │ /aif-improve        │                        │
                              │    (optional)       │                        │
                              │                     │                        │
                              │ Refine plan with    │                        │
@@ -89,9 +87,9 @@ The repeatable development loop. Each skill feeds into the next, sharing context
                                         ▼                                   │
                              ┌──────────────────────┐                       │
                              │                      │◀── reads patches ─────┘
-                             │ /aif-implement│
+                             │ /aif-implement       │
                              │ ──── error?          │
-                             │  ──▶ /aif-fix │
+                             │  ──▶ /aif-fix       │
                              │  Execute tasks       │
                              │  Commit checkpoints  │
                              │                      │
@@ -100,21 +98,21 @@ The repeatable development loop. Each skill feeds into the next, sharing context
                                         ▼
                              ┌──────────────────────────────────────┐
                              │                                      │
-                             │ /aif-verify                   │
+                             │ /aif-verify                          │
                              │    (optional)                        │
                              │                                      │
                              │ Check completeness                   │
-                             │ Build / test / lint                   │
+                             │ Build / test / lint                  │
                              │    ↓                                 │
-                             │ → /aif-security-checklist     │
-                             │ → /aif-review                 │
+                             │ → /aif-security-checklist            │
+                             │ → /aif-review                        │
                              │                                      │
                              └──────────────────┬───────────────────┘
                                         │
                                         ▼
                              ┌─────────────────────┐
                              │                     │
-                             │ /aif-commit  │
+                             │ /aif-commit         │
                              │                     │
                              └──────────┬──────────┘
                                         │
@@ -126,7 +124,7 @@ The repeatable development loop. Each skill feeds into the next, sharing context
                                                         ▼
                                              ┌─────────────────────┐
                                              │                     │
-                                             │ /aif-evolve  │
+                                             │ /aif-evolve         │
                                              │                     │
                                              │ Reads patches +     │
                                              │ project context     │
