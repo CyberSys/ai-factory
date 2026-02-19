@@ -47,7 +47,28 @@ AI Factory can configure these MCP servers:
 | Filesystem | Advanced file operations | - |
 | Chrome Devtools | Browser inspection, debugging, performance | - |
 
-Configuration saved to agent's settings file (e.g. `.claude/settings.local.json` for Claude Code, `.cursor/mcp.json` for Cursor, `.roo/mcp.json` for Roo Code, `.kilocode/mcp.json` for Kilo Code, `opencode.json` for OpenCode, gitignored).
+Configuration saved to agent's settings file (e.g. `.mcp.json` for Claude Code, `.cursor/mcp.json` for Cursor, `.roo/mcp.json` for Roo Code, `.kilocode/mcp.json` for Kilo Code, `opencode.json` for OpenCode).
+
+### Environment Variables
+
+MCP configs use `${VAR}` placeholders for credentials. Set them before launching the agent:
+
+```bash
+export GITHUB_TOKEN="ghp_your_token"
+export DATABASE_URL="postgresql://user:pass@localhost:5432/db"
+```
+
+Or replace the placeholders with actual values directly in the config file:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "env": { "GITHUB_TOKEN": "ghp_your_token" }
+    }
+  }
+}
+```
 
 ## Project Structure
 
@@ -68,7 +89,7 @@ your-project/
 │   │   ├── aif-docs/
 │   │   ├── aif-review/
 │   │   └── aif-skill-generator/
-│   └── settings.local.json    # MCP config (Claude/Cursor, gitignored)
+│   └── settings.local.json    # Permissions config (gitignored)
 ├── .ai-factory/               # AI Factory working directory
 │   ├── DESCRIPTION.md         # Project specification
 │   ├── ARCHITECTURE.md        # Architecture decisions and guidelines
@@ -86,6 +107,7 @@ your-project/
 │           ├── run.json
 │           ├── history.jsonl
 │           └── artifact.md
+├── .mcp.json                  # MCP servers config (Claude Code project scope)
 └── .ai-factory.json           # AI Factory config
 ```
 

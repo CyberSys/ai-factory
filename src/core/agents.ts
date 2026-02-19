@@ -14,7 +14,7 @@ const AGENT_REGISTRY: Record<string, AgentConfig> = {
     displayName: 'Claude Code',
     configDir: '.claude',
     skillsDir: '.claude/skills',
-    settingsFile: '.claude/settings.local.json',
+    settingsFile: '.mcp.json',
     supportsMcp: true,
     skillsCliAgent: 'claude-code',
   },

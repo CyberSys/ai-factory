@@ -326,7 +326,7 @@ To add support for a new AI coding agent:
      supportsMcp: false,              // true if agent supports MCP servers
    },
    ```
-   - `settingsFile` is relative to project root (e.g. `.claude/settings.local.json`, `opencode.json`)
+   - `settingsFile` is relative to project root (e.g. `.mcp.json` for Claude Code, `opencode.json` for OpenCode)
    - Set `supportsMcp: true` + provide `settingsFile` to enable MCP auto-configuration
 
 2. **`src/core/mcp.ts`** — only if MCP format differs from Claude/Cursor standard:
