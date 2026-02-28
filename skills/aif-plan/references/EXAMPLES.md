@@ -16,6 +16,14 @@
 -> mode=full, description="Add user authentication with OAuth"
 ```
 
+### Full mode with description omitted (defaults from RESEARCH.md)
+
+```text
+/aif-plan full
+-> mode=full
+-> description defaults to .ai-factory/RESEARCH.md Active Summary Topic (if present)
+```
+
 ### Full mode with parallel worktree
 
 ```text
@@ -42,6 +50,14 @@
 ```text
 /aif-plan Add user authentication
 -> ask mode interactively, description="Add user authentication"
+```
+
+### No mode + no description (defaults from RESEARCH.md)
+
+```text
+/aif-plan
+-> ask mode interactively
+-> description defaults to .ai-factory/RESEARCH.md Active Summary Topic (if present)
 ```
 
 ## Flow Scenarios

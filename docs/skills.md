@@ -14,9 +14,9 @@ Explore ideas, constraints, and trade-offs before planning:
 /aif-explore add-auth-system
 ```
 - Uses a thinking-partner mode: open questions, option mapping, and ASCII visualization
-- Reads project context from `.ai-factory/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, and active plan files when present
+- Reads project context from `.ai-factory/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, `.ai-factory/RESEARCH.md`, and active plan files when present
 - Does **not** implement code in this mode; when direction is clear, move to `/aif-plan`
-- Can capture decisions in context files on request (for example architecture notes, rules, and roadmap updates)
+- Can optionally persist exploration context to `.ai-factory/RESEARCH.md` so you can `/clear` and still feed results into `/aif-plan`
 
 ### `/aif-plan [fast|full] <description>`
 Plans implementation for a feature or task:
@@ -31,6 +31,8 @@ Two modes:
 - **Full** — creates git branch (`feature/user-authentication`), asks about testing/logging/docs, saves plan to `.ai-factory/plans/<branch>.md`
 
 Both modes explore your codebase for patterns, create tasks with dependencies, and include commit checkpoints for 5+ tasks.
+
+If `.ai-factory/RESEARCH.md` exists, `/aif-plan` reads the `Active Summary` and includes it as `Research Context` in the plan.
 
 **Parallel mode** — work on multiple features simultaneously using `git worktree`:
 ```

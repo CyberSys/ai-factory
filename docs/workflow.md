@@ -50,11 +50,13 @@ The repeatable development loop. Each skill feeds into the next, sharing context
 
 Optional discovery step: use `/aif-explore` before planning to investigate ideas, compare options, and clarify requirements.
 
+If you want exploration results to survive `/clear` and feed directly into planning, ask it to save to `.ai-factory/RESEARCH.md`.
+
 ![workflow](https://github.com/lee-to/ai-factory/raw/2.x/art/workflow.png)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                       DEVELOPMENT WORKFLOW                               │
+│                       DEVELOPMENT WORKFLOW                              │
 └─────────────────────────────────────────────────────────────────────────┘
 
                ┌──────────────────────────┐                         ┌──────────────┐
@@ -141,7 +143,7 @@ Optional discovery step: use `/aif-explore` before planning to investigate ideas
 
 | Command | Use Case | Creates Branch? | Creates Plan? |
 |---------|----------|-----------------|---------------|
-| `/aif-explore` | Discovery, option comparison, and requirements clarification before planning | No | No (reads existing context) |
+| `/aif-explore` | Discovery, option comparison, and requirements clarification before planning | No | No (optional `.ai-factory/RESEARCH.md` on request) |
 | `/aif-roadmap` | Strategic planning, milestones, long-term vision | No | `.ai-factory/ROADMAP.md` |
 | `/aif-plan fast` | Small tasks, quick fixes, experiments | No | `.ai-factory/PLAN.md` |
 | `/aif-plan full` | Full features, stories, epics | Yes | `.ai-factory/plans/<branch>.md` |
@@ -163,7 +165,7 @@ These skills form the development pipeline. Each one feeds into the next.
 /aif-explore add-auth-system
 ```
 
-Thinking-partner mode for exploring ideas, constraints, and trade-offs without implementing code. Reads `.ai-factory/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, and active plan files for context. When direction is clear, transition to `/aif-plan fast` or `/aif-plan full`.
+Thinking-partner mode for exploring ideas, constraints, and trade-offs without implementing code. Reads `.ai-factory/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, `.ai-factory/RESEARCH.md`, and active plan files for context. If you want the context to persist across sessions (or after `/clear`), save it to `.ai-factory/RESEARCH.md`. When direction is clear, transition to `/aif-plan fast` or `/aif-plan full`.
 
 ### `/aif-roadmap [check | vision]` — strategic planning
 

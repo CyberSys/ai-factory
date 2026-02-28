@@ -57,7 +57,7 @@ ai-factory init
 /aif-plan Add user authentication with OAuth
 ```
 
-If scope is unclear, start with `/aif-explore`; if it is already clear, jump straight to `/aif-plan`. From there, AI Factory creates a branch (full mode), builds a plan, and you run `/aif-implement` to execute it step by step.
+If scope is unclear, start with `/aif-explore` (optionally save results to `.ai-factory/RESEARCH.md`); if it is already clear, jump straight to `/aif-plan`. From there, AI Factory creates a branch (full mode), builds a plan, and you run `/aif-implement` to execute it step by step.
 
 ## CLI Commands
 
