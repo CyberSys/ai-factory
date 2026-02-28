@@ -165,6 +165,12 @@ Key rules:
 All workflow skills (/aif-plan, /aif-implement) will now follow these architecture guidelines.
 ```
 
+## Artifact Ownership
+
+- Primary ownership: `.ai-factory/ARCHITECTURE.md`.
+- Allowed companion updates: architecture pointer in `.ai-factory/DESCRIPTION.md`, architecture row in `AGENTS.md` context table.
+- Read-only context: roadmap, rules, research, and plan artifacts unless user explicitly requests otherwise.
+
 ---
 
 ## Knowledge Base

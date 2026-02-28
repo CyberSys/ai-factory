@@ -271,3 +271,4 @@ Next up: **Milestone Name**
 3. **Never remove milestones silently** — always confirm with user before removing
 4. **Completed table tracks history** — every checked milestone gets a date entry
 5. **NO implementation** — this skill only plans, use `/aif-plan` to start a feature and `/aif-implement` to execute
+6. **Ownership boundary** — this command owns roadmap structure/content; `/aif-implement` may only mark milestones completed when implementation evidence is clear

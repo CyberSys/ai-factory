@@ -139,6 +139,11 @@ For full phase contracts and stop conditions, see [Reflex Loop](loop.md).
 
 ## Best Practices
 
+### Artifact Ownership and Context Gates
+- Keep context artifact ownership command-scoped (roadmap by `/aif-roadmap`, rules by `/aif-rules`, architecture by `/aif-architecture`, research by `/aif-explore`).
+- Treat `/aif-commit`, `/aif-review`, and `/aif-verify` as read-only consumers of context artifacts by default.
+- Use `WARN` for non-blocking gate findings (missing optional files, ambiguous mapping) and `ERROR` for blocking violations.
+
 ### Logging
 All implementations include verbose, configurable logging:
 - Use log levels (DEBUG, INFO, WARN, ERROR)

@@ -395,6 +395,12 @@ Install skills, configure MCP, generate `AGENTS.md`, and generate architecture d
 4. **MCP in .mcp.json** — Project-level (agent reads MCP from `.mcp.json`, not `settings.local.json`)
 5. **Remind about env vars** — For MCP that need credentials
 
+## Artifact Ownership
+
+- Primary ownership in this command: `.ai-factory/DESCRIPTION.md`, setup-time `AGENTS.md`, installed skills, and MCP configuration.
+- Delegated ownership: invoke `/aif-architecture` to create/update `.ai-factory/ARCHITECTURE.md`.
+- Read-only context in this command by default: `.ai-factory/ROADMAP.md`, `.ai-factory/RULES.md`, `.ai-factory/RESEARCH.md`, and plan files.
+
 ## CRITICAL: Do NOT Implement
 
 **This skill ONLY sets up context (skills + MCP). It does NOT implement the project.**

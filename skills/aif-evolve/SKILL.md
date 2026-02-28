@@ -247,6 +247,7 @@ Options:
 4. **Cumulative** — each evolution builds on previous ones
 5. **No hallucination** — only suggest improvements backed by evidence
 6. **Preserve structure** — don't change skill workflow, only enrich it
+7. **Ownership boundary** — this command owns `.ai-factory/evolutions/*.md` and approved skill edits; treat roadmap/rules/research/plan artifacts as read-only context unless explicitly asked
 
 ## Examples
 

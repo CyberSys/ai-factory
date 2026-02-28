@@ -121,6 +121,8 @@ Append-only event stream, one JSON object per line:
 
 Single source of truth for artifact content. Written after PRODUCE and REFINE phases. Artifact content is never stored in `run.json` — always read from this file.
 
+Ownership note: `artifact.md` is owned by `/aif-loop` for the active run. Other workflow commands should treat loop artifacts as read-only context unless the user explicitly asks for manual edits.
+
 ## Phases
 
 6 phases per iteration with parallel execution where possible:

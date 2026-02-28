@@ -496,3 +496,4 @@ Options:
 4. **Use the project's language** — if project README is in Russian, write docs in Russian
 5. **Preserve existing badges/logos** — don't remove them during restructuring
 6. **Add to .gitignore** if generating HTML: add `docs-html/` to .gitignore
+7. **Ownership boundary** — this command owns documentation artifacts (`README.md`, `docs/*`, and the Documentation section in `AGENTS.md`), not `.ai-factory/ROADMAP.md`, `.ai-factory/RULES.md`, or `.ai-factory/RESEARCH.md`

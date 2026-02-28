@@ -103,3 +103,4 @@ Total rules: [count]
 3. **No duplicates** — check for existing rules with the same meaning before adding
 4. **Actionable language** — rules should be clear directives ("Always...", "Never...", "Use...", "Routes must...")
 5. **RULES.md location** — always `.ai-factory/RULES.md`, create `.ai-factory/` directory if needed
+6. **Ownership boundary** — this command owns `.ai-factory/RULES.md`; other context artifacts stay read-only unless explicitly requested by the user

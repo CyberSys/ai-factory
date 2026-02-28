@@ -128,10 +128,11 @@ Verifies completed implementation against the plan:
 - **Task completion audit** — goes through every task in the plan, uses `Glob`/`Grep`/`Read` to confirm the code actually implements each requirement. Reports `COMPLETE`, `PARTIAL`, or `NOT FOUND` per task
 - **Build & test check** — runs the project's build command, test suite, and linters on changed files
 - **Consistency checks** — searches for leftover `TODO`/`FIXME`/`HACK`, undocumented environment variables, missing dependencies, plan-vs-code naming drift
+- **Context gates (read-only)** — checks architecture/roadmap/rules alignment before final status; missing optional roadmap/rules files are warnings
 - **Issue remediation** — if issues found, first suggests `/aif-fix <issue summary>` (recommended), with optional direct fix in-session
 - **Follow-up suggestions** — if all green, suggests `/aif-security-checklist`, `/aif-review`, then `/aif-commit`
 
-**Strict mode** (`--strict`) is recommended before merging: requires all tasks complete, build passing, tests passing, lint clean, zero TODOs in changed files.
+**Strict mode** (`--strict`) is recommended before merging: requires all tasks complete, build passing, tests passing, lint clean, zero TODOs in changed files, and passing architecture/rules/roadmap gates (including milestone linkage for `feat`/`fix`/`perf` when roadmap exists).
 
 ### `/aif-fix [bug description]`
 Bug fix with optional plan-first mode:
@@ -347,6 +348,20 @@ Creates conventional commits:
 - Analyzes staged changes
 - Generates meaningful commit message
 - Follows conventional commits format
+- Runs read-only architecture/roadmap/rules gate checks before commit proposal
+- Warning-first by default (no implicit strict mode)
+- For `feat`/`fix`/`perf`, warns when roadmap milestone linkage is missing
+
+### `/aif-review [PR number or URL]`
+Reviews staged changes or PR diffs:
+```
+/aif-review
+/aif-review 123
+/aif-review https://github.com/org/repo/pull/123
+```
+- Checks correctness, security, performance, and maintainability
+- Adds read-only context-gate findings (architecture/roadmap/rules) to review output
+- Uses `WARN` for non-blocking context drift and `ERROR` only for explicitly blocking review criteria
 
 ### `/aif-skill-generator`
 Generates new skills:

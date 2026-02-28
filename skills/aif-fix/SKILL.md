@@ -324,6 +324,8 @@ function fixedFunction(input) {
 8. **Minimal changes** - Don't refactor unrelated code
 9. **One fix at a time** - Don't scope creep
 10. **Clean up** - Delete FIX_PLAN.md after successful fix execution
+11. **Ownership boundary** - `/aif-fix` owns `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`; treat roadmap/rules/architecture context artifacts as read-only unless the user explicitly requests otherwise
+12. **Logging scope** - Keep `[FIX]` logging requirements for fixes; context-gate outputs in this command should use `WARN`/`ERROR` and must not change global logging policy in other skills
 
 ## After Fixing
 

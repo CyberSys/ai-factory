@@ -486,6 +486,7 @@ Use canonical examples in `references/TASK-FORMAT.md`:
 6. **Include file paths** — Help implementer know where to work
 7. **Commit checkpoints for large plans** — 5+ tasks need commit plan with checkpoints every 3-5 tasks
 8. **Plan file location** — Fast mode: `.ai-factory/PLAN.md`. Full mode: `.ai-factory/plans/<branch-name>.md`
+9. **Ownership boundary** — This command owns plan files only (`.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md`). Use owner commands (`/aif-roadmap`, `/aif-rules`, `/aif-explore`) for their artifacts.
 
 ## Plan File Handling
 

@@ -477,6 +477,13 @@ Shows progress without executing.
 - ❌ Mark incomplete tasks as done
 - ❌ Violate `.ai-factory/ARCHITECTURE.md` conventions for file placement and module boundaries
 
+## Artifact Ownership Boundaries
+
+- Primary ownership in this command: task execution state and plan progress checkboxes.
+- Allowed context artifact updates: `.ai-factory/DESCRIPTION.md`, `.ai-factory/ARCHITECTURE.md`, and roadmap milestone completion in `.ai-factory/ROADMAP.md` when implementation evidence justifies it.
+- Read-only context in this command by default: `.ai-factory/RULES.md`, `.ai-factory/RESEARCH.md`.
+- Context-gate findings should be communicated as `WARN`/`ERROR` outputs only; this does not replace the required verbose implementation logging rules below.
+
 For progress display format, blocker handling, session continuity examples, and full flow examples → see `references/IMPLEMENTATION-GUIDE.md`
 
 ## Critical Rules

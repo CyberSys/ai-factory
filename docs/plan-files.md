@@ -9,6 +9,22 @@ AI Factory uses markdown files to track implementation plans:
 | `/aif-plan fast` | `.ai-factory/PLAN.md` | Offer to delete |
 | `/aif-plan full` | `.ai-factory/plans/<branch-name>.md` | Keep (user decides) |
 
+## Artifact Ownership Quick Map
+
+To avoid ownership conflicts, artifact writers are command-scoped:
+
+| Artifact                                                  | Primary owner command | Notes                                                                                            |
+|-----------------------------------------------------------|-----------------------|--------------------------------------------------------------------------------------------------|
+| `.ai-factory/DESCRIPTION.md`                              | `/aif`                | `/aif-implement` and `/aif-fix` may update only when implementation/fix context actually changed |
+| `.ai-factory/ARCHITECTURE.md`                             | `/aif-architecture`   | `/aif-implement` may update structure notes when implementation changes structure                |
+| `.ai-factory/ROADMAP.md`                                  | `/aif-roadmap`        | `/aif-implement` may mark completed milestones with evidence                                     |
+| `.ai-factory/RULES.md`                                    | `/aif-rules`          | convention source of truth                                                                       |
+| `.ai-factory/RESEARCH.md`                                 | `/aif-explore`        | explore-mode writable artifact                                                                   |
+| `.ai-factory/PLAN.md` and `.ai-factory/plans/<branch>.md` | `/aif-plan`           | `/aif-improve` refines existing plans                                                            |
+| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`  | `/aif-fix`            | fix workflow artifacts                                                                           |
+
+Quality commands (`/aif-commit`, `/aif-review`, `/aif-verify`) treat these files as read-only context by default.
+
 ## Research File (Optional)
 
 `.ai-factory/RESEARCH.md` is a persisted exploration artifact. Use it to capture constraints, decisions, and open questions during `/aif-explore` so you can `/clear` and still feed the same context into `/aif-plan`.

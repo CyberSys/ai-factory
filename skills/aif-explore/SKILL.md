@@ -14,6 +14,14 @@ Enter explore mode. Think deeply. Visualize freely. Follow the conversation wher
 
 ---
 
+## Artifact Ownership
+
+- Primary ownership in explore mode: `.ai-factory/RESEARCH.md` only.
+- All other context artifacts (`DESCRIPTION.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `RULES.md`, plan files) are read-only in this mode.
+- If a discovery should affect another artifact, capture it in RESEARCH now and route follow-up to the owner command later.
+
+---
+
 ## The Stance
 
 - **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
