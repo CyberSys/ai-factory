@@ -13,6 +13,15 @@ Created: [date]
 - Logging: verbose/standard/minimal
 - Docs: yes/no
 
+## Research Context (optional)
+<!-- If .ai-factory/RESEARCH.md exists, copy/paste the Active Summary here -->
+Source: .ai-factory/RESEARCH.md (Active Summary)
+
+Goal:
+Constraints:
+Decisions:
+Open questions:
+
 ## Commit Plan
 <!-- For plans with 5+ tasks, define commit checkpoints -->
 - **Commit 1** (after tasks 1-3): "feat: add base models and types"

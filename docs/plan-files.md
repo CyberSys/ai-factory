@@ -9,6 +9,14 @@ AI Factory uses markdown files to track implementation plans:
 | `/aif-plan fast` | `.ai-factory/PLAN.md` | Offer to delete |
 | `/aif-plan full` | `.ai-factory/plans/<branch-name>.md` | Keep (user decides) |
 
+## Research File (Optional)
+
+`.ai-factory/RESEARCH.md` is a persisted exploration artifact. Use it to capture constraints, decisions, and open questions during `/aif-explore` so you can `/clear` and still feed the same context into `/aif-plan`.
+
+Typical structure:
+- `## Active Summary (input for /aif-plan)` — compact, up-to-date snapshot
+- `## Sessions` — append-only history (keep prior notes verbatim)
+
 **Example plan file:**
 
 ```markdown
@@ -21,6 +29,13 @@ Created: 2024-01-15
 - Testing: no
 - Logging: verbose
 - Docs: yes          # /aif-implement will run /aif-docs after completion
+
+## Research Context (optional)
+Source: .ai-factory/RESEARCH.md (Active Summary)
+Goal: Add OAuth + email login
+Constraints: Must support existing session middleware
+Decisions: Use JWT for API auth
+Open questions: Do we need refresh tokens?
 
 ## Commit Plan
 - **Commit 1** (tasks 1-3): "feat: add user model and types"
