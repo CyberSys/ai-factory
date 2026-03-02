@@ -41,8 +41,10 @@ for skill_dir in "$ROOT_DIR"/skills/*/; do
     if [[ "$skill_name" != "aif" && "$skill_name" != aif-* ]]; then
         continue
     fi
+    set +e
     OUTPUT=$(bash "$VALIDATOR" "$skill_dir" 2>&1)
     EXIT_CODE=$?
+    set -e
     WARNS=$(echo "$OUTPUT" | grep -c 'WARNING' || true)
     if [[ $EXIT_CODE -ne 0 ]]; then
         fail "$skill_name"
@@ -222,6 +224,9 @@ set -e
 if [[ $SELF_SCAN_EXIT -eq 0 ]]; then
     pass "self-scan passed (no critical threats after allowlist)"
     echo "$SELF_SCAN_OUTPUT" | grep -E 'Critical:|Warnings:|Ignored by allowlist' | sed 's/^/      /' || true
+elif [[ $SELF_SCAN_EXIT -eq 3 ]]; then
+    pass "self-scan skipped ${YELLOW}(Python 3 not found)${NC}"
+    echo "      Install Python 3 to enable internal self-scan."
 else
     fail "self-scan failed (critical threats or scanner error)"
     echo "$SELF_SCAN_OUTPUT" | sed 's/^/      /'
