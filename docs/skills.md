@@ -169,6 +169,7 @@ Self-improve skills based on project experience:
 - Analyzes project tech stack, conventions, and codebase patterns
 - Identifies gaps in existing skills (missing guards, tech-specific pitfalls)
 - Proposes targeted improvements with user approval
+- Writes project-specific overrides to `.ai-factory/skill-context/<skill>/SKILL.md` (skills treat these as higher-priority rules)
 - Saves evolution log to `.ai-factory/evolutions/`
 - The more `/aif-fix` patches you accumulate, the smarter `/aif-evolve` becomes
 

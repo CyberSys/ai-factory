@@ -157,17 +157,17 @@ If you want exploration results to survive `/clear` and feed directly into plann
 
 Ownership is command-scoped to avoid conflicting writers:
 
-| Command                                   | Primary artifact ownership                             | Notes                                                 |
-|-------------------------------------------|--------------------------------------------------------|-------------------------------------------------------|
-| `/aif`                                    | `.ai-factory/DESCRIPTION.md`, setup `AGENTS.md`        | invokes `/aif-architecture` for architecture file     |
-| `/aif-architecture`                       | `.ai-factory/ARCHITECTURE.md`                          | may update architecture pointer in DESCRIPTION/AGENTS |
-| `/aif-roadmap`                            | `.ai-factory/ROADMAP.md`                               | `/aif-implement` may mark completed milestones        |
-| `/aif-rules`                              | `.ai-factory/RULES.md`                                 | append/update rules only                              |
-| `/aif-plan`                               | `.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md` | `/aif-improve` refines existing plans                 |
-| `/aif-explore`                            | `.ai-factory/RESEARCH.md`                              | all other artifacts are read-only in explore mode     |
-| `/aif-fix`                                | `.ai-factory/FIX_PLAN.md`, `.ai-factory/patches/*.md`  | bug-fix learning loop artifacts                       |
-| `/aif-evolve`                             | `.ai-factory/evolutions/*.md`                          | skill updates only with approval                      |
-| `/aif-commit` `/aif-review` `/aif-verify` | read-only context by default                           | gate and report, no default context-file writes       |
+| Command                                   | Primary artifact ownership                                   | Notes                                                 |
+|-------------------------------------------|--------------------------------------------------------------|-------------------------------------------------------|
+| `/aif`                                    | `.ai-factory/DESCRIPTION.md`, setup `AGENTS.md`              | invokes `/aif-architecture` for architecture file     |
+| `/aif-architecture`                       | `.ai-factory/ARCHITECTURE.md`                                | may update architecture pointer in DESCRIPTION/AGENTS |
+| `/aif-roadmap`                            | `.ai-factory/ROADMAP.md`                                     | `/aif-implement` may mark completed milestones        |
+| `/aif-rules`                              | `.ai-factory/RULES.md`                                       | append/update rules only                              |
+| `/aif-plan`                               | `.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md`       | `/aif-improve` refines existing plans                 |
+| `/aif-explore`                            | `.ai-factory/RESEARCH.md`                                    | all other artifacts are read-only in explore mode     |
+| `/aif-fix`                                | `.ai-factory/FIX_PLAN.md`, `.ai-factory/patches/*.md`        | bug-fix learning loop artifacts                       |
+| `/aif-evolve`                             | `.ai-factory/evolutions/*.md`, `.ai-factory/skill-context/*` | skill-context overrides + evolution logs (approved)   |
+| `/aif-commit` `/aif-review` `/aif-verify` | read-only context by default                                 | gate and report, no default context-file writes       |
 
 Context-gate defaults for `/aif-commit`, `/aif-review`, `/aif-verify`:
 - Check architecture, roadmap, and rules alignment as read-only context.
