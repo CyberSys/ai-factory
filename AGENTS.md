@@ -66,6 +66,7 @@ All AI Factory files in user projects go to `.ai-factory/`:
 - `.ai-factory/plans/<branch>.md` — plans (from /aif-plan full)
 - `.ai-factory/skill-context/<skill>/SKILL.md` — project-specific overrides for skills (from /aif-evolve)
 - `.ai-factory/evolutions/*.md` — evolution logs (from /aif-evolve)
+- `.ai-factory/evolutions/patch-cursor.json` — incremental evolve cursor (latest processed patch)
 - `.ai-factory/evolution/current.json` — active loop pointer (from /aif-loop)
 - `.ai-factory/evolution/<alias>/run.json` — current loop state
 - `.ai-factory/evolution/<alias>/history.jsonl` — loop event history (append-only)
@@ -75,18 +76,18 @@ All AI Factory files in user projects go to `.ai-factory/`:
 
 Artifact writers are command-scoped to prevent ownership conflicts:
 
-| Artifact                                                 | Primary writer command | Notes                                                                                            |
-|----------------------------------------------------------|------------------------|--------------------------------------------------------------------------------------------------|
-| `.ai-factory/DESCRIPTION.md`                             | `/aif`                 | `/aif-implement` may update only when implementation materially changed context facts            |
-| `.ai-factory/ARCHITECTURE.md`                            | `/aif-architecture`    | `/aif-implement` may update structure notes when structure changes                               |
-| `.ai-factory/ROADMAP.md`                                 | `/aif-roadmap`         | `/aif-implement` may mark completed milestones with evidence                                     |
-| `.ai-factory/RULES.md`                                   | `/aif-rules`           | conventions source of truth                                                                      |
-| `.ai-factory/RESEARCH.md`                                | `/aif-explore`         | explore-mode writable artifact                                                                   |
-| `.ai-factory/PLAN.md` / `.ai-factory/plans/<branch>.md`  | `/aif-plan`            | `/aif-improve` refines existing plans                                                            |
-| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md` | `/aif-fix`             | fix workflow ownership; context artifacts (including `DESCRIPTION.md`) stay read-only by default |
-| `.ai-factory/skill-context/*`                            | `/aif-evolve`          | skill-context overrides for built-in skills                                                      |
-| `.ai-factory/evolutions/*.md`                            | `/aif-evolve`          | evolution logs                                                                                   |
-| `.ai-factory/evolution/*` artifacts                      | `/aif-loop`            | loop state ownership                                                                             |
+| Artifact                                                                     | Primary writer command | Notes                                                                                            |
+|------------------------------------------------------------------------------|------------------------|--------------------------------------------------------------------------------------------------|
+| `.ai-factory/DESCRIPTION.md`                                                 | `/aif`                 | `/aif-implement` may update only when implementation materially changed context facts            |
+| `.ai-factory/ARCHITECTURE.md`                                                | `/aif-architecture`    | `/aif-implement` may update structure notes when structure changes                               |
+| `.ai-factory/ROADMAP.md`                                                     | `/aif-roadmap`         | `/aif-implement` may mark completed milestones with evidence                                     |
+| `.ai-factory/RULES.md`                                                       | `/aif-rules`           | conventions source of truth                                                                      |
+| `.ai-factory/RESEARCH.md`                                                    | `/aif-explore`         | explore-mode writable artifact                                                                   |
+| `.ai-factory/PLAN.md` / `.ai-factory/plans/<branch>.md`                      | `/aif-plan`            | `/aif-improve` refines existing plans                                                            |
+| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`                     | `/aif-fix`             | fix workflow ownership; context artifacts (including `DESCRIPTION.md`) stay read-only by default |
+| `.ai-factory/skill-context/*`                                                | `/aif-evolve`          | skill-context overrides for built-in skills                                                      |
+| `.ai-factory/evolutions/*.md` and `.ai-factory/evolutions/patch-cursor.json` | `/aif-evolve`          | evolution logs and incremental patch cursor                                                      |
+| `.ai-factory/evolution/*` artifacts                                          | `/aif-loop`            | loop state ownership                                                                             |
 
 Quality commands (`/aif-commit`, `/aif-review`, `/aif-verify`) are read-only for context artifacts by default.
 
@@ -176,6 +177,8 @@ If stopped by max iterations without meeting criteria, final summary shows dista
     ↓
 Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
     ↓
+Reads skill-context rules first; uses limited recent patch fallback when needed
+    ↓
 Finds plan file (PLAN.md or branch-named)
     ↓
 Executes tasks one by one
@@ -190,7 +193,7 @@ Offers to delete PLAN.md when done (keeps feature-*.md)
 
 /aif-fix <bug description>
     ↓
-Reads .ai-factory/DESCRIPTION.md + patches for context
+Reads .ai-factory/DESCRIPTION.md + skill-context first (+ limited recent patch fallback)
     ↓
 Investigates codebase (Glob, Grep, Read)
     ↓
@@ -204,7 +207,7 @@ NO plans, NO reports
 
 /aif-evolve [skill-name|"all"]
     ↓
-Reads .ai-factory/DESCRIPTION.md + all patches
+Reads .ai-factory/DESCRIPTION.md + patches incrementally (cursor-based)
     ↓
 Analyzes recurring patterns and tech-specific pitfalls
     ↓

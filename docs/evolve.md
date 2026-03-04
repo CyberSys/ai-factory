@@ -2,24 +2,34 @@
 
 # Skill Evolution
 
-Every `/aif-fix` leaves behind a **patch** — a structured record of what went wrong and how it was fixed. `/aif-evolve` reads all accumulated patches, analyzes your project's tech stack and conventions, and turns recurring patterns into **rules** that make skills smarter. The more you fix, the better the evolution.
+Every `/aif-fix` leaves behind a **patch** — a structured record of what went wrong and how it was fixed. `/aif-evolve` processes patches incrementally, analyzes your project's tech stack and conventions, and turns recurring patterns into **rules** that make skills smarter. The more you fix, the better the evolution.
 
 ## The Learning Loop
 
 ```
   /aif-fix            patches/             /aif-evolve           skill rules
  ┌──────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
- │ Find bug │ ───▶ │ Save patch   │ ───▶ │ Analyze all  │ ───▶ │ Add rules to │
+ │ Find bug │ ───▶ │ Save patch   │ ───▶ │ Analyze new  │ ───▶ │ Add rules to │
  │ Fix it   │      │ with root    │      │ patches +    │      │ skills so    │
  │ Log it   │      │ cause + tags │      │ project ctx  │      │ they don't   │
  └──────────┘      └──────────────┘      └──────────────┘      │ repeat the   │
-      ▲                                                         │ same bugs    │
-      │                                                         └──────┬───────┘
-      │                                                                │
+      ▲                                                        │ same bugs    │
+      │                                                        └──────┬───────┘
+      │                                                               │
       └──────────── better /aif-fix, /aif-implement, /aif-review ◀────┘
 ```
 
 Each iteration of this loop makes the AI more aware of your project's pitfalls. After 10 fixes, `/aif-evolve` has enough signal to add targeted guards — not generic advice, but rules derived from real bugs in your codebase.
+
+Incremental state file:
+
+```
+.ai-factory/evolutions/patch-cursor.json
+```
+
+- No cursor: first evolve run reads all patches
+- Cursor present: evolve reads only patches newer than cursor
+- Full rescan: delete cursor file and rerun `/aif-evolve`
 
 ## Skill-Context: Project-Specific Rules
 
@@ -89,7 +99,7 @@ Skill name is normalized automatically: `fix` → `aif-fix`, `/aif-plan` → `ai
 | Step | What happens |
 |------|--------------|
 | **0: Resolve target & load context** | Normalize skill name, validate it exists. Read `DESCRIPTION.md` and skill-context files. For single-skill mode — only that skill's context + evolve's own. For all — glob all context files (no duplicates) |
-| **1: Collect intelligence** | Read all patches from `.ai-factory/patches/`, extract each independent prevention point with its target skill(s), and build a **Prevention Point Registry** — a flat table of all prevention points across all patches (a patch with 5 points = 5 rows). Group by tags, find recurring patterns. Scan the project for conventions (linters, test patterns, error handling, logging, imports). For single-skill mode — focus convention scanning on areas relevant to that skill |
+| **1: Collect intelligence** | Read patches from `.ai-factory/patches/` incrementally (first run reads all; later runs read only new patches by cursor), extract each independent prevention point with its target skill(s), and build a **Prevention Point Registry** for the processed set (a patch with 5 points = 5 rows). Group by tags, find recurring patterns. Scan the project for conventions (linters, test patterns, error handling, logging, imports). For single-skill mode — focus convention scanning on areas relevant to that skill |
 | **2: Read target skills** | Load base SKILL.md **only for target skills** — not all. For `/aif-evolve plan` — read only `aif-plan/SKILL.md`. Keep in memory for Step 3 (no re-reads) |
 | **3: Check for stale rules** | Compare each skill-context rule against base SKILL.md. Classify as: fully covered (Case A), contradiction (Case B), partial overlap (Case C), or still unique (Case D). See [Stale Rule Cleanup](#stale-rule-cleanup) |
 | **4: Present & resolve stale rules** | Present stale rule findings to user in batches of up to 3 via `AskUserQuestion`. Collect decisions (keep / remove / rewrite) and apply them before proceeding |

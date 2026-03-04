@@ -116,7 +116,7 @@ Executes the plan:
 /aif-implement 5      # Start from task #5
 /aif-implement status # Check progress
 ```
-- **Reads past patches** from `.ai-factory/patches/` before starting — learns from previous mistakes
+- **Reads skill-context first** (`.ai-factory/skill-context/aif-implement/SKILL.md`) and only uses limited recent patch fallback when needed
 - Finds plan file (`@plan-file` if provided; otherwise branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` → redirects to `/aif-fix`)
 - `--list` mode is read-only: shows available plan files and exits
 - Executes tasks one by one
@@ -171,7 +171,7 @@ Self-improve skills based on project experience:
 /aif-evolve fix      # Evolve only /aif-fix skill
 /aif-evolve all      # Evolve all skills
 ```
-- Reads all patches from `.ai-factory/patches/` — finds recurring problems
+- Reads patches incrementally from `.ai-factory/patches/` using `.ai-factory/evolutions/patch-cursor.json` (first run reads all)
 - Analyzes project tech stack, conventions, and codebase patterns
 - Identifies gaps in existing skills (missing guards, tech-specific pitfalls)
 - Proposes targeted improvements with user approval

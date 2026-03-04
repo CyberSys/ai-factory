@@ -120,7 +120,8 @@ your-project/
 │   ├── patches/               # Self-improvement patches (from /aif-fix)
 │   │   └── 2026-02-07-14.30.md
 │   ├── evolutions/            # Evolution logs (from /aif-evolve)
-│   │   └── 2026-02-08-10.00.md
+│   │   ├── 2026-02-08-10.00.md
+│   │   └── patch-cursor.json  # Incremental evolve cursor (latest processed patch)
 │   └── evolution/             # Active reflex loop state (from /aif-loop)
 │       ├── current.json
 │       └── <task-alias>/
@@ -141,6 +142,15 @@ your-project/
 - `.ai-factory/evolution/<task-alias>/artifact.md` — latest artifact output
 
 For full phase contracts and stop conditions, see [Reflex Loop](loop.md).
+
+## Evolution Cursor File
+
+`/aif-evolve` uses a lightweight cursor to process patches incrementally:
+
+- `.ai-factory/evolutions/patch-cursor.json` — last processed patch marker
+- First run (no cursor): evolve reads all patches
+- Subsequent runs: evolve reads only patches newer than the cursor
+- To force a full rescan: delete `patch-cursor.json` and run `/aif-evolve` again
 
 ## Best Practices
 

@@ -90,10 +90,10 @@ If you want exploration results to survive `/clear` and feed directly into plann
                                         │                                   │
                                         ▼                                   │
                              ┌──────────────────────┐                       │
-                             │                      │◀── reads patches ─────┘
-                             │ /aif-implement       │
+                             │                      │◀── skill-context  ────┘
+                             │ /aif-implement       │       (+limited patch fallback)
                              │ ──── error?          │
-                             │  ──▶ /aif-fix       │
+                             │  ──▶ /aif-fix        │
                              │  Execute tasks       │
                              │  Commit checkpoints  │
                              │                      │
@@ -130,7 +130,7 @@ If you want exploration results to survive `/clear` and feed directly into plann
                                              │                     │
                                              │ /aif-evolve         │
                                              │                     │
-                                             │ Reads patches +     │
+                                             │ Reads new patches + │
                                              │ project context     │
                                              │       ↓             │
                                              │ Improves skills     │
@@ -157,17 +157,17 @@ If you want exploration results to survive `/clear` and feed directly into plann
 
 Ownership is command-scoped to avoid conflicting writers:
 
-| Command                                   | Primary artifact ownership                                   | Notes                                                 |
-|-------------------------------------------|--------------------------------------------------------------|-------------------------------------------------------|
-| `/aif`                                    | `.ai-factory/DESCRIPTION.md`, setup `AGENTS.md`              | invokes `/aif-architecture` for architecture file     |
-| `/aif-architecture`                       | `.ai-factory/ARCHITECTURE.md`                                | may update architecture pointer in DESCRIPTION/AGENTS |
-| `/aif-roadmap`                            | `.ai-factory/ROADMAP.md`                                     | `/aif-implement` may mark completed milestones        |
-| `/aif-rules`                              | `.ai-factory/RULES.md`                                       | append/update rules only                              |
-| `/aif-plan`                               | `.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md`       | `/aif-improve` refines existing plans                 |
-| `/aif-explore`                            | `.ai-factory/RESEARCH.md`                                    | all other artifacts are read-only in explore mode     |
-| `/aif-fix`                                | `.ai-factory/FIX_PLAN.md`, `.ai-factory/patches/*.md`        | bug-fix learning loop artifacts                       |
-| `/aif-evolve`                             | `.ai-factory/evolutions/*.md`, `.ai-factory/skill-context/*` | skill-context overrides + evolution logs (approved)   |
-| `/aif-commit` `/aif-review` `/aif-verify` | read-only context by default                                 | gate and report, no default context-file writes       |
+| Command                                   | Primary artifact ownership                                                                               | Notes                                                   |
+|-------------------------------------------|----------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `/aif`                                    | `.ai-factory/DESCRIPTION.md`, setup `AGENTS.md`                                                          | invokes `/aif-architecture` for architecture file       |
+| `/aif-architecture`                       | `.ai-factory/ARCHITECTURE.md`                                                                            | may update architecture pointer in DESCRIPTION/AGENTS   |
+| `/aif-roadmap`                            | `.ai-factory/ROADMAP.md`                                                                                 | `/aif-implement` may mark completed milestones          |
+| `/aif-rules`                              | `.ai-factory/RULES.md`                                                                                   | append/update rules only                                |
+| `/aif-plan`                               | `.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md`                                                   | `/aif-improve` refines existing plans                   |
+| `/aif-explore`                            | `.ai-factory/RESEARCH.md`                                                                                | all other artifacts are read-only in explore mode       |
+| `/aif-fix`                                | `.ai-factory/FIX_PLAN.md`, `.ai-factory/patches/*.md`                                                    | bug-fix learning loop artifacts                         |
+| `/aif-evolve`                             | `.ai-factory/evolutions/*.md`, `.ai-factory/evolutions/patch-cursor.json`, `.ai-factory/skill-context/*` | skill-context overrides + evolution logs + cursor state |
+| `/aif-commit` `/aif-review` `/aif-verify` | read-only context by default                                                                             | gate and report, no default context-file writes         |
 
 Context-gate defaults for `/aif-commit`, `/aif-review`, `/aif-verify`:
 - Check architecture, roadmap, and rules alignment as read-only context.
@@ -245,7 +245,7 @@ For full contracts and state transition rules, see [Reflex Loop](loop.md).
 /aif-implement status # Check progress
 ```
 
-Reads past patches from `.ai-factory/patches/` to learn from previous mistakes, then executes tasks one by one with commit checkpoints. Plan source priority: `@plan-file` argument, then branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` (redirects to `/aif-fix`). `--list` is a read-only discovery mode that shows available plan files and exits. If the plan has `Docs: yes`, runs `/aif-docs` after completion.
+Reads skill-context rules first, then uses limited recent patch fallback when needed. Executes tasks one by one with commit checkpoints. Plan source priority: `@plan-file` argument, then branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` (redirects to `/aif-fix`). `--list` is a read-only discovery mode that shows available plan files and exits. If the plan has `Docs: yes`, runs `/aif-docs` after completion.
 
 ### `/aif-verify [--strict]` — check completeness
 
@@ -290,7 +290,7 @@ Every fix creates a **self-improvement patch** in `.ai-factory/patches/`. Every 
 /aif-evolve fix      # Evolve only the fix skill
 ```
 
-Reads all accumulated patches, analyzes project patterns, and proposes targeted skill improvements. Closes the learning loop: **fix → patch → evolve → better skills → fewer bugs**.
+Reads patches incrementally using an evolve cursor, analyzes project patterns, and proposes targeted skill improvements. Closes the learning loop: **fix → patch → evolve → better skills → fewer bugs**.
 
 ---
 

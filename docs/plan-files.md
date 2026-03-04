@@ -13,17 +13,17 @@ AI Factory uses markdown files to track implementation plans:
 
 To avoid ownership conflicts, artifact writers are command-scoped:
 
-| Artifact                                                  | Primary owner command | Notes                                                                                          |
-|-----------------------------------------------------------|-----------------------|------------------------------------------------------------------------------------------------|
-| `.ai-factory/DESCRIPTION.md`                              | `/aif`                | `/aif-implement` may update only when implementation context actually changed                  |
-| `.ai-factory/ARCHITECTURE.md`                             | `/aif-architecture`   | `/aif-implement` may update structure notes when implementation changes structure              |
-| `.ai-factory/ROADMAP.md`                                  | `/aif-roadmap`        | `/aif-implement` may mark completed milestones with evidence                                   |
-| `.ai-factory/RULES.md`                                    | `/aif-rules`          | convention source of truth                                                                     |
-| `.ai-factory/RESEARCH.md`                                 | `/aif-explore`        | explore-mode writable artifact                                                                 |
-| `.ai-factory/PLAN.md` and `.ai-factory/plans/<branch>.md` | `/aif-plan`           | `/aif-improve` refines existing plans                                                          |
-| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`  | `/aif-fix`            | fix workflow artifacts; context files (including `DESCRIPTION.md`) remain read-only by default |
-| `.ai-factory/skill-context/*`                             | `/aif-evolve`         | project-specific skill overrides derived from patches                                          |
-| `.ai-factory/evolutions/*.md`                             | `/aif-evolve`         | evolution logs                                                                                 |
+| Artifact                                                                  | Primary owner command | Notes                                                                                          |
+|---------------------------------------------------------------------------|-----------------------|------------------------------------------------------------------------------------------------|
+| `.ai-factory/DESCRIPTION.md`                                              | `/aif`                | `/aif-implement` may update only when implementation context actually changed                  |
+| `.ai-factory/ARCHITECTURE.md`                                             | `/aif-architecture`   | `/aif-implement` may update structure notes when implementation changes structure              |
+| `.ai-factory/ROADMAP.md`                                                  | `/aif-roadmap`        | `/aif-implement` may mark completed milestones with evidence                                   |
+| `.ai-factory/RULES.md`                                                    | `/aif-rules`          | convention source of truth                                                                     |
+| `.ai-factory/RESEARCH.md`                                                 | `/aif-explore`        | explore-mode writable artifact                                                                 |
+| `.ai-factory/PLAN.md` and `.ai-factory/plans/<branch>.md`                 | `/aif-plan`           | `/aif-improve` refines existing plans                                                          |
+| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`                  | `/aif-fix`            | fix workflow artifacts; context files (including `DESCRIPTION.md`) remain read-only by default |
+| `.ai-factory/skill-context/*`                                             | `/aif-evolve`         | project-specific skill overrides derived from patches                                          |
+| `.ai-factory/evolutions/*.md`, `.ai-factory/evolutions/patch-cursor.json` | `/aif-evolve`         | evolution logs + incremental patch cursor                                                      |
 
 Quality commands (`/aif-commit`, `/aif-review`, `/aif-verify`) treat these files as read-only context by default.
 
@@ -80,15 +80,15 @@ Open questions: Do we need refresh tokens?
 AI Factory has a built-in learning loop. Every bug fix creates a **patch** — a structured knowledge artifact that helps AI avoid the same mistakes in the future.
 
 ```
-/aif-fix → finds bug → fixes it → creates patch → next /aif-fix or /aif-implement reads all patches → better code
+/aif-fix → finds bug → fixes it → creates patch → /aif-evolve distills new patches into skill-context → smarter future runs
 ```
 
 **How it works:**
 
 1. `/aif-fix` fixes a bug and creates a patch file in `.ai-factory/patches/YYYY-MM-DD-HH.mm.md`
 2. Each patch documents: **Problem**, **Root Cause**, **Solution**, **Prevention**, and **Tags**
-3. Before any `/aif-fix` or `/aif-implement`, AI reads all existing patches
-4. AI applies lessons learned — avoids patterns that caused bugs, follows patterns that prevented them
+3. `/aif-evolve` reads patches incrementally using `.ai-factory/evolutions/patch-cursor.json` (first run reads all)
+4. Workflow skills (`/aif-implement`, `/aif-fix`, `/aif-improve`) prefer skill-context rules and use only limited recent patch fallback when needed
 
 **Example patch** (`.ai-factory/patches/2026-02-07-14.30.md`):
 
@@ -118,7 +118,7 @@ Added optional chaining: `user.avatar?.url` with fallback.
 
 The more you use `/aif-fix`, the smarter AI becomes on your project. Patches accumulate and create a project-specific knowledge base.
 
-**Periodic evolution** -- run `/aif-evolve` to analyze all patches and automatically improve skills:
+**Periodic evolution** -- run `/aif-evolve` to analyze new patches and automatically improve skills:
 
 ```
 /aif-evolve      # Analyze patches + project → improve all skills
