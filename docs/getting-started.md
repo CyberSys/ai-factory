@@ -62,13 +62,10 @@ If scope is unclear, start with `/aif-explore` (optionally save results to `.ai-
 ## CLI Commands
 
 ```bash
-# Update npm package to latest version
-npm install -g ai-factory@latest
-
 # Initialize project
 ai-factory init
 
-# Update skills to latest version
+# Update skills to latest version (also checks for CLI updates)
 ai-factory update
 
 # Migrate existing skills from v1 naming to v2 naming
@@ -84,9 +81,7 @@ ai-factory extension list
 ai-factory extension remove my-extension
 ```
 
-For v1 -> v2 migration, run both commands in order:
-1. `npm install -g ai-factory@latest`
-2. `ai-factory upgrade`
+For v1 -> v2 migration, run `ai-factory upgrade` to rename old skills to the new `aif-*` prefix.
 
 ## Next Steps
 

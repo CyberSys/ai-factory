@@ -84,14 +84,12 @@ npx ai-factory init
 ### Upgrading from v1 to v2
 
 ```bash
-# 1) Update the CLI package
-npm install -g ai-factory@latest
-
-# 2) Migrate existing skills to v2 naming
 ai-factory upgrade
 ```
 
 `ai-factory upgrade` removes old bare-named skills (`commit`, `feature`, etc.) and installs new `aif-*` prefixed versions. Custom skills are preserved.
+
+> **Note:** `ai-factory update` automatically checks npm for a newer CLI version and offers to install it before updating skills. You no longer need to run `npm install -g ai-factory@latest` manually.
 
 ### Example Workflow
 
