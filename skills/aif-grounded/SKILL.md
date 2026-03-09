@@ -2,7 +2,7 @@
 name: aif-grounded
 description: Reliability gate for answers. Forces evidence-based reasoning, explicit uncertainty, and “insufficient information” instead of guesses. Use when user says “be 100% sure”, “no hallucinations”, “only if verified”, “grounded answer”, or when stakes are high.
 argument-hint: "[question or task]"
-allowed-tools: Read Write Edit Glob Grep Bash Questions
+allowed-tools: Read Write Edit Glob Grep Bash AskUserQuestion Questions
 disable-model-invocation: true
 ---
 

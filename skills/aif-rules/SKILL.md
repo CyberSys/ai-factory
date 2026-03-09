@@ -2,7 +2,7 @@
 name: aif-rules
 description: Add project-specific rules and conventions to .ai-factory/RULES.md. Each invocation appends new rules. These rules are automatically loaded by /aif-implement before execution. Use when user says "add rule", "remember this", "convention", or "always do X".
 argument-hint: "[rule text or topic]"
-allowed-tools: Read Write Edit Glob Grep Questions
+allowed-tools: Read Write Edit Glob Grep AskUserQuestion Questions
 disable-model-invocation: true
 ---
 

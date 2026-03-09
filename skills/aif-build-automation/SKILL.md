@@ -5,7 +5,7 @@ description: >-
   If a build file already exists, improves it by adding missing targets and best practices.
   Use when user says "generate makefile", "create taskfile", "add justfile", "setup mage", or "build automation".
 argument-hint: "[makefile|taskfile|justfile|mage]"
-allowed-tools: Read Edit Glob Grep Write Bash(git *) Questions
+allowed-tools: Read Edit Glob Grep Write Bash(git *) AskUserQuestion Questions
 disable-model-invocation: false
 metadata:
   author: AI Factory

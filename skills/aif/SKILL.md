@@ -2,7 +2,7 @@
 name: aif
 description: Set up agent context for a project. Analyzes tech stack, installs relevant skills from skills.sh, generates custom skills, and configures MCP servers. Use when starting new project, setting up AI context, or asking "set up project", "configure AI", "what skills do I need".
 argument-hint: "[project description]"
-allowed-tools: Read Glob Grep Write Bash(mkdir *) Bash(npx skills *) Bash(python *security-scan*) Bash(rm -rf *) Skill WebFetch Questions
+allowed-tools: Read Glob Grep Write Bash(mkdir *) Bash(npx skills *) Bash(python *security-scan*) Bash(rm -rf *) Skill WebFetch AskUserQuestion Questions
 ---
 
 # AI Factory - Project Setup

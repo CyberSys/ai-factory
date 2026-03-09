@@ -2,7 +2,7 @@
 name: aif-explore
 description: Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through something before or during a change.
 argument-hint: "[topic or plan name]"
-allowed-tools: Read Glob Grep Write Edit Bash Questions
+allowed-tools: Read Glob Grep Write Edit Bash AskUserQuestion Questions
 disable-model-invocation: true
 ---
 

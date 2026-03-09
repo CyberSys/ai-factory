@@ -2,7 +2,7 @@
 name: aif-loop
 description: Run a strict multi-iteration Reflex Loop with phases (PLAN, PRODUCE||PREPARE, EVALUATE, CRITIQUE, REFINE) to improve an artifact until quality gates pass or iteration limits are reached. Use when user asks for iterative refinement, quality-gated generation, or "generate -> critique -> refine" loops.
 argument-hint: "[new|resume|status|stop|list|history|clean] [task or alias]"
-allowed-tools: Read Write Edit Glob Grep Bash Task Questions
+allowed-tools: Read Write Edit Glob Grep Bash Task AskUserQuestion Questions
 disable-model-invocation: true
 ---
 

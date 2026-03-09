@@ -2,7 +2,7 @@
 name: aif-ci
 description: Generate CI/CD pipeline (GitHub Actions / GitLab CI) with linting, static analysis, tests, security. Use when user says "ci", "setup ci", "github actions", "gitlab ci", "pipeline".
 argument-hint: "[github|gitlab] [--enhance]"
-allowed-tools: Read Edit Glob Grep Write Bash(git *) Questions
+allowed-tools: Read Edit Glob Grep Write Bash(git *) AskUserQuestion Questions
 disable-model-invocation: true
 metadata:
   author: AI Factory
