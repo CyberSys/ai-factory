@@ -108,7 +108,7 @@ What would you like to do?
 
 Based on choice:
 - New feature from current → `/aif-plan full <description>`
-- Return to main → `git checkout main && git pull` → `/aif-plan full <description>`
+- Return to main → `git checkout main`, then `git pull` → `/aif-plan full <description>`
 - Quick task → `/aif-plan fast <description>`
 
 **If plan file exists → continue to Step 0.1**
