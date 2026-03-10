@@ -122,8 +122,13 @@ When invoked:
    3. Cancel
    ```
 
-7. Execute `git commit` with the confirmed message
-8. After a successful commit, offer to push:
+7. Handle user response:
+   - **Commit as is** → proceed to step 8
+   - **Edit message** → ask the user for the corrected message via `AskUserQuestion`, then return to step 6 with the new message
+   - **Cancel** → stop, do NOT commit. End the workflow
+
+8. Execute `git commit` with the confirmed message
+9. After a successful commit, offer to push:
    - Show branch/ahead status: `git status -sb`
    - If the branch has no upstream, use: `git push -u origin <branch>`
    - Otherwise: `git push`
@@ -135,6 +140,9 @@ When invoked:
    1. Push now
    2. Skip push
    ```
+
+   - **Push now** → execute `git push`
+   - **Skip push** → end the workflow
 
 If argument provided (e.g., `/aif-commit auth`):
 - Use it as the scope
@@ -159,7 +167,11 @@ If argument provided (e.g., `/aif-commit auth`):
      3. Let me adjust the grouping
      ```
 
-  3. Unstage all: `git reset HEAD`
-  4. Stage and commit each group separately using `git add <files>` + `git commit`
-  5. Offer to push only after all commits are done
+  3. Handle user response:
+     - **Yes, split as suggested** → proceed to step 4
+     - **No, commit everything together** → proceed to step 6 (propose single commit message)
+     - **Let me adjust the grouping** → ask the user for the adjusted grouping via `AskUserQuestion`, then return to step 2 with the new plan
+  4. Unstage all: `git reset HEAD`
+  5. Stage and commit each group separately using `git add <files>` + `git commit`
+  6. Offer to push only after all commits are done
 - NEVER add `Co-Authored-By` or any other trailer attributing authorship to the AI. Commits must not contain AI co-author lines
