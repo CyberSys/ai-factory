@@ -14,10 +14,16 @@ export interface McpConfig {
   playwright: boolean;
 }
 
+export interface ManagedSkillState {
+  sourceHash: string;
+  installedHash: string;
+}
+
 export interface AgentInstallation {
   id: string;
   skillsDir: string;
   installedSkills: string[];
+  managedSkills?: Record<string, ManagedSkillState>;
   mcp: McpConfig;
 }
 
@@ -65,8 +71,32 @@ function createAgentInstallation(agentId: string, legacy?: LegacyAiFactoryConfig
     skillsDir: legacy?.skillsDir ?? agent.skillsDir,
     id: agentId,
     installedSkills: legacy?.installedSkills ?? [],
+    managedSkills: {},
     mcp: normalizeMcp(legacy?.mcp),
   };
+}
+
+function normalizeManagedSkills(raw: unknown): Record<string, ManagedSkillState> {
+  if (!raw || typeof raw !== 'object') {
+    return {};
+  }
+
+  const result: Record<string, ManagedSkillState> = {};
+
+  for (const [skillName, state] of Object.entries(raw as Record<string, unknown>)) {
+    if (!skillName || typeof state !== 'object' || !state) {
+      continue;
+    }
+
+    const sourceHash = (state as { sourceHash?: unknown }).sourceHash;
+    const installedHash = (state as { installedHash?: unknown }).installedHash;
+
+    if (typeof sourceHash === 'string' && sourceHash.length > 0 && typeof installedHash === 'string' && installedHash.length > 0) {
+      result[skillName] = { sourceHash, installedHash };
+    }
+  }
+
+  return result;
 }
 
 export async function loadConfig(projectDir: string): Promise<AiFactoryConfig | null> {
@@ -83,6 +113,7 @@ export async function loadConfig(projectDir: string): Promise<AiFactoryConfig | 
         id: agent.id,
         skillsDir: agent.skillsDir || agentConfig.skillsDir,
         installedSkills: Array.isArray(agent.installedSkills) ? agent.installedSkills : [],
+        managedSkills: normalizeManagedSkills((agent as { managedSkills?: unknown }).managedSkills),
         mcp: normalizeMcp(agent.mcp),
       };
     });

@@ -233,6 +233,23 @@ else
 fi
 
 # ─────────────────────────────────────────────
+# Part 5: Update command smoke tests
+# ─────────────────────────────────────────────
+echo -e "\n${BOLD}=== Update command smoke tests ===${NC}\n"
+
+set +e
+UPDATE_SMOKE_OUTPUT=$(bash "$ROOT_DIR/scripts/test-update.sh" 2>&1)
+UPDATE_SMOKE_EXIT=$?
+set -e
+
+if [[ $UPDATE_SMOKE_EXIT -eq 0 ]]; then
+    pass "update smoke tests"
+else
+    fail "update smoke tests"
+    echo "$UPDATE_SMOKE_OUTPUT" | sed 's/^/      /'
+fi
+
+# ─────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────
 echo -e "\n${BOLD}=== Results ===${NC}"

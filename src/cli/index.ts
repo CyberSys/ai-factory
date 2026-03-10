@@ -21,6 +21,7 @@ program
 program
   .command('update')
   .description('Update installed skills to latest version')
+  .option('--force', 'Force clean reinstall of currently installed base skills')
   .action(updateCommand);
 
 program

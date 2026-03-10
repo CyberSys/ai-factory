@@ -40,7 +40,9 @@ ai-factory extension remove aif-ext-example
 
 ### What Happens on Update
 
-Running `ai-factory update` reinstalls base skills from scratch (skipping any skills replaced by extensions), re-installs replacement skills, then **re-applies all extension injections** automatically. MCP server configs and custom commands are not affected by updates.
+Running `ai-factory update` updates previously installed base skills, reports per-agent status (`changed`, `unchanged`, `skipped`, `removed`), skips base skills replaced by extensions, re-installs replacement skills, then **re-applies all extension injections** automatically. MCP server configs and custom commands are not affected by updates.
+
+`ai-factory update --force` performs a clean reinstall of currently installed base skills before extension replacement and injection re-apply. Replaced skills are still handled by extension manifests, and custom extension commands/MCP config remain intact.
 
 ### What Happens on Remove
 

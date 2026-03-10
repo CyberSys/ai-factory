@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,14 @@ export async function readTextFile(filePath: string): Promise<string | null> {
   }
 }
 
+export async function readFileBuffer(filePath: string): Promise<Buffer | null> {
+  try {
+    return await fs.readFile(filePath);
+  } catch {
+    return null;
+  }
+}
+
 export async function listDirectories(dirPath: string): Promise<string[]> {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -67,6 +76,70 @@ export async function listDirectories(dirPath: string): Promise<string[]> {
 export async function writeTextFile(filePath: string, content: string): Promise<void> {
   await fs.ensureDir(path.dirname(filePath));
   await fs.writeFile(filePath, content, 'utf-8');
+}
+
+export async function listFilesRecursive(dirPath: string): Promise<string[]> {
+  const files: string[] = [];
+
+  async function walk(currentDir: string): Promise<void> {
+    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else if (entry.isFile()) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  try {
+    const stats = await fs.stat(dirPath);
+    if (!stats.isDirectory()) {
+      return [];
+    }
+  } catch {
+    return [];
+  }
+
+  await walk(dirPath);
+  files.sort((a, b) => a.localeCompare(b));
+  return files;
+}
+
+export function hashBuffer(content: Buffer | string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+export async function hashFile(filePath: string): Promise<string | null> {
+  const content = await readFileBuffer(filePath);
+  if (!content) {
+    return null;
+  }
+  return hashBuffer(content);
+}
+
+export async function hashDirectory(dirPath: string): Promise<string | null> {
+  const files = await listFilesRecursive(dirPath);
+  if (files.length === 0) {
+    return null;
+  }
+
+  const hasher = createHash('sha256');
+  for (const absFile of files) {
+    const content = await readFileBuffer(absFile);
+    if (!content) {
+      return null;
+    }
+    const relPath = path.relative(dirPath, absFile).replaceAll('\\', '/');
+    hasher.update(`path:${relPath}\n`);
+    hasher.update(content);
+    hasher.update('\n');
+  }
+
+  return hasher.digest('hex');
 }
 
 export async function ensureDir(dirPath: string): Promise<void> {

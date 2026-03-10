@@ -12,6 +12,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "bash scripts/test-skills.sh",
+    "test:update": "bash scripts/test-update.sh",
     "lint:unused": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "lint:dead": "knip --reporter compact",
     "lint": "npm run lint:unused && npm run lint:dead",

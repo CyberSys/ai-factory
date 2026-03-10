@@ -4,7 +4,7 @@ import {realpathSync} from 'fs';
 import {execSync} from 'child_process';
 import inquirer from 'inquirer';
 import {getCurrentVersion, loadConfig, saveConfig} from '../../core/config.js';
-import {getAvailableSkills, partitionSkills, updateSkills} from '../../core/installer.js';
+import {buildManagedSkillsState, getAvailableSkills, partitionSkills, type SkillUpdateEntry, updateSkills} from '../../core/installer.js';
 import {applyExtensionInjections} from '../../core/injections.js';
 import {getExtensionsDir, loadExtensionManifest} from '../../core/extensions.js';
 import {
@@ -12,6 +12,47 @@ import {
   installSkillsForAllAgents,
   collectReplacedSkills,
 } from '../../core/extension-ops.js';
+import {fileExists} from '../../utils/fs.js';
+
+interface UpdateCommandOptions {
+  force?: boolean;
+}
+
+function formatReason(reason: string): string {
+  switch (reason) {
+    case 'source-hash-changed':
+      return 'source changed';
+    case 'installed-hash-drift':
+      return 'local drift';
+    case 'missing-managed-state':
+      return 'state missing';
+    case 'missing-installed-artifact':
+      return 'artifact missing';
+    case 'package-removed':
+      return 'removed from package';
+    case 'new-skill-not-installed':
+      return 'new in package';
+    case 'replaced-by-extension':
+      return 'replaced by extension';
+    case 'force-clean-reinstall':
+      return 'force reinstall';
+    case 'install-failed':
+      return 'install failed';
+    case 'source-missing':
+      return 'source unavailable';
+    default:
+      return reason;
+  }
+}
+
+function groupEntriesByStatus(entries: SkillUpdateEntry[]): Record<'changed' | 'unchanged' | 'skipped' | 'removed', SkillUpdateEntry[]> {
+  return {
+    changed: entries.filter(entry => entry.status === 'changed').sort((a, b) => a.skill.localeCompare(b.skill)),
+    unchanged: entries.filter(entry => entry.status === 'unchanged').sort((a, b) => a.skill.localeCompare(b.skill)),
+    skipped: entries.filter(entry => entry.status === 'skipped').sort((a, b) => a.skill.localeCompare(b.skill)),
+    removed: entries.filter(entry => entry.status === 'removed').sort((a, b) => a.skill.localeCompare(b.skill)),
+  };
+}
 
 function parseVersion(v: string): { parts: number[]; prerelease: string | null } {
   const [core, ...rest] = v.split('-');
@@ -114,8 +155,9 @@ async function selfUpdate(currentVersion: string): Promise<boolean> {
   }
 }
 
-export async function updateCommand(): Promise<void> {
+export async function updateCommand(options: UpdateCommandOptions = {}): Promise<void> {
   const projectDir = process.cwd();
+  const force = Boolean(options.force);
 
   console.log(chalk.bold.blue('\n🏭 AI Factory - Update Skills\n'));
 
@@ -135,31 +177,16 @@ export async function updateCommand(): Promise<void> {
   const selfUpdated = await selfUpdate(currentVersion);
   if (selfUpdated) return;
 
+  if (force) {
+    console.log(chalk.yellow('⚠ Force mode enabled: clean reinstall of installed base skills\n'));
+  }
+
   console.log(chalk.dim('Updating skills...\n'));
 
   try {
     const availableSkills = await getAvailableSkills();
-    const previousBaseSkillsByAgent = new Map<string, string[]>();
+    const entriesByAgent = new Map<string, SkillUpdateEntry[]>();
 
-    for (const agent of config.agents) {
-      const { base: previousBaseSkills } = partitionSkills(agent.installedSkills);
-      previousBaseSkillsByAgent.set(agent.id, previousBaseSkills);
-      const newSkills = availableSkills.filter(s => !previousBaseSkills.includes(s));
-
-      const removedSkills = previousBaseSkills.filter(s => !availableSkills.includes(s));
-
-      if (newSkills.length > 0) {
-        console.log(chalk.cyan(`📦 [${agent.id}] New skills available: ${newSkills.join(', ')}`));
-      }
-      if (removedSkills.length > 0) {
-        console.log(chalk.yellow(`🗑️  [${agent.id}] Removed skills: ${removedSkills.join(', ')}`));
-      }
-    }
-    if (config.agents.length > 0) {
-      console.log('');
-    }
-
-    // Collect all replaced skills from extensions
     const extensions = config.extensions ?? [];
     const allReplacedSkills = collectReplacedSkills(extensions);
 
@@ -168,7 +195,12 @@ export async function updateCommand(): Promise<void> {
     }
 
     for (const agent of config.agents) {
-      agent.installedSkills = await updateSkills(agent, projectDir, [...allReplacedSkills]);
+      const result = await updateSkills(agent, projectDir, {
+        excludeSkills: [...allReplacedSkills],
+        force,
+      });
+      agent.installedSkills = result.installedSkills;
+      entriesByAgent.set(agent.id, result.entries);
     }
 
     // Re-install replacement skills from extensions
@@ -241,6 +273,14 @@ export async function updateCommand(): Promise<void> {
       }
     }
 
+    // Rebuild managed state after final update + replacement + injection pipeline.
+    const finalReplacedSkills = collectReplacedSkills(extensions);
+    for (const agent of config.agents) {
+      const { base: baseSkills } = partitionSkills(agent.installedSkills);
+      const managedBaseSkills = baseSkills.filter(skill => availableSkills.includes(skill) && !finalReplacedSkills.has(skill));
+      agent.managedSkills = await buildManagedSkillsState(projectDir, agent, managedBaseSkills);
+    }
+
     config.version = currentVersion;
     await saveConfig(projectDir, config);
 
@@ -248,15 +288,64 @@ export async function updateCommand(): Promise<void> {
     console.log(chalk.green('✓ Configuration updated'));
 
     for (const agent of config.agents) {
-      const previousBaseSkills = previousBaseSkillsByAgent.get(agent.id) ?? [];
-      const newSkills = availableSkills.filter(s => !previousBaseSkills.includes(s));
-      const { base: baseSkills, custom: customSkills } = partitionSkills(agent.installedSkills);
+      const entries = entriesByAgent.get(agent.id) ?? [];
+      const grouped = groupEntriesByStatus(entries);
+      const changedWithContextWarnings: string[] = [];
 
-      console.log(chalk.bold(`\n[${agent.id}] Base skills:`));
-      for (const skill of baseSkills) {
-        const isNew = newSkills.includes(skill);
-        console.log(chalk.dim(`  - ${skill}`) + (isNew ? chalk.green(' (new)') : ''));
+      for (const entry of grouped.changed) {
+        const skillContextPath = path.join(projectDir, '.ai-factory', 'skill-context', entry.skill, 'SKILL.md');
+        if (await fileExists(skillContextPath)) {
+          changedWithContextWarnings.push(entry.skill);
+        }
       }
+
+      console.log(chalk.bold(`\n[${agent.id}] Status:`));
+      console.log(chalk.dim(`  changed: ${grouped.changed.length}`));
+      console.log(chalk.dim(`  unchanged: ${grouped.unchanged.length}`));
+      console.log(chalk.dim(`  skipped: ${grouped.skipped.length}`));
+      console.log(chalk.dim(`  removed: ${grouped.removed.length}`));
+
+      if (grouped.changed.length > 0) {
+        console.log(chalk.bold('  Changed:'));
+        for (const entry of grouped.changed) {
+          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+        }
+      }
+
+      if (grouped.skipped.length > 0) {
+        console.log(chalk.bold('  Skipped:'));
+        for (const entry of grouped.skipped) {
+          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+        }
+      }
+
+      if (grouped.removed.length > 0) {
+        console.log(chalk.bold('  Removed:'));
+        for (const entry of grouped.removed) {
+          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+        }
+      }
+
+      const recoveryEntries = grouped.changed.filter(entry => [
+        'missing-managed-state',
+        'missing-installed-artifact',
+        'source-missing',
+      ].includes(entry.reason));
+      if (recoveryEntries.length > 0) {
+        console.log(chalk.yellow('  WARN: managed state recovered for:'));
+        for (const entry of recoveryEntries) {
+          console.log(chalk.yellow(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+        }
+      }
+
+      if (changedWithContextWarnings.length > 0) {
+        console.log(chalk.yellow('  WARN: skill-context override may need review for changed skills:'));
+        for (const skill of changedWithContextWarnings) {
+          console.log(chalk.yellow(`    - ${skill} (.ai-factory/skill-context/${skill}/SKILL.md)`));
+        }
+      }
+
+      const { custom: customSkills } = partitionSkills(agent.installedSkills);
 
       if (customSkills.length > 0) {
         console.log(chalk.bold(`[${agent.id}] Custom skills (preserved):`));

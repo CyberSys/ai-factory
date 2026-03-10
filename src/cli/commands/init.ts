@@ -1,13 +1,14 @@
 import chalk from 'chalk';
 import path from 'path';
 import { runWizard } from '../wizard/prompts.js';
-import { installSkills } from '../../core/installer.js';
+import { buildManagedSkillsState, installSkills } from '../../core/installer.js';
 import { saveConfig, configExists, loadConfig, getCurrentVersion, type AgentInstallation } from '../../core/config.js';
 import { configureMcp, getMcpInstructions } from '../../core/mcp.js';
 import { getAgentConfig } from '../../core/agents.js';
 import { cleanupAgentSetup, getAgentOnboarding } from '../../core/transformer.js';
 import { removeDirectory } from '../../utils/fs.js';
 import { applyExtensionInjections } from '../../core/injections.js';
+import { collectReplacedSkills } from '../../core/extension-ops.js';
 
 async function removeAgentSetup(projectDir: string, agent: AgentInstallation): Promise<void> {
   await removeDirectory(path.join(projectDir, agent.skillsDir));
@@ -85,12 +86,6 @@ export async function initCommand(): Promise<void> {
 
     const existingExtensions = existingConfig?.extensions ?? [];
 
-    await saveConfig(projectDir, {
-      version: getCurrentVersion(),
-      agents: installedAgents,
-      extensions: existingExtensions,
-    });
-
     // Re-apply extension injections after skill installation
     if (existingExtensions.length > 0) {
       let totalInjections = 0;
@@ -101,6 +96,18 @@ export async function initCommand(): Promise<void> {
         console.log(chalk.green(`✓ Re-applied ${totalInjections} extension injection(s)`));
       }
     }
+
+    const replacedSkills = collectReplacedSkills(existingExtensions);
+    for (const agent of installedAgents) {
+      const managedBaseSkills = agent.installedSkills.filter(skill => !replacedSkills.has(skill));
+      agent.managedSkills = await buildManagedSkillsState(projectDir, agent, managedBaseSkills);
+    }
+
+    await saveConfig(projectDir, {
+      version: getCurrentVersion(),
+      agents: installedAgents,
+      extensions: existingExtensions,
+    });
 
     console.log(chalk.green('✓ Configuration saved to .ai-factory.json'));
 
