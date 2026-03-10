@@ -109,15 +109,42 @@ When invoked:
 3. Run read-only context gates and summarize findings as `WARN`/`ERROR`
 4. If commit type is `feat`/`fix`/`perf` and roadmap exists, check milestone linkage; if missing, warn and suggest adding linkage in commit body/footer
 5. Propose a commit message
-6. Ask for confirmation or modifications
-7. Execute `git commit` with the message
-8. After a successful commit, offer to push:
+6. Confirm with the user before committing:
+
+   ```
+   AskUserQuestion: Proposed commit message:
+
+   <type>(<scope>): <subject>
+
+   Options:
+   1. Commit as is
+   2. Edit message
+   3. Cancel
+   ```
+
+7. Handle user response:
+   - **Commit as is** → proceed to step 8
+   - **Edit message** → ask the user for the corrected message via `AskUserQuestion`, then return to step 6 with the new message
+   - **Cancel** → stop, do NOT commit. End the workflow
+
+8. Execute `git commit` with the confirmed message
+9. After a successful commit, offer to push:
    - Show branch/ahead status: `git status -sb`
    - If the branch has no upstream, use: `git push -u origin <branch>`
    - Otherwise: `git push`
-   - User choice:
-      - [ ] Push now
-      - [ ] Skip push
+
+   ```
+   AskUserQuestion: Push to remote?
+
+   Options:
+   1. Push now
+   2. Skip push
+   ```
+
+   - **Push now** → execute push command based on upstream status:
+     - if branch has no upstream → `git push -u origin <branch>`
+     - otherwise → `git push`
+   - **Skip push** → end the workflow
 
 If argument provided (e.g., `/aif-commit auth`):
 - Use it as the scope
@@ -131,8 +158,22 @@ If argument provided (e.g., `/aif-commit auth`):
 - Treat `.ai-factory/ARCHITECTURE.md`, `.ai-factory/ROADMAP.md`, `.ai-factory/RULES.md`, and `.ai-factory/DESCRIPTION.md` as read-only context in this command
 - If staged changes contain unrelated work (e.g., a feature + a bugfix, or changes to independent modules), suggest splitting into separate commits:
   1. Show which files/hunks belong to which commit
-  2. Ask for confirmation
-  3. Unstage all: `git reset HEAD`
-  4. Stage and commit each group separately using `git add <files>` + `git commit`
-  5. Offer to push only after all commits are done
+  2. Confirm split plan with the user:
+
+     ```
+     AskUserQuestion: Split into separate commits?
+
+     Options:
+     1. Yes, split as suggested
+     2. No, commit everything together
+     3. Let me adjust the grouping
+     ```
+
+  3. Handle user response:
+     - **Yes, split as suggested** → proceed to step 4
+     - **No, commit everything together** → proceed to step 5 (propose single commit message)
+     - **Let me adjust the grouping** → ask the user for the adjusted grouping via `AskUserQuestion`, then return to step 2 with the new plan
+  4. Unstage all: `git reset HEAD`
+  5. Stage and commit each group separately using `git add <files>` + `git commit`
+  6. Offer to push only after all commits are done
 - NEVER add `Co-Authored-By` or any other trailer attributing authorship to the AI. Commits must not contain AI co-author lines
