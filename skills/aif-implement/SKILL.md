@@ -70,11 +70,18 @@ Then reconcile plan/task state:
 
 **If uncommitted changes exist:**
 ```
-You have uncommitted changes. Commit them first?
-- [ ] Yes, commit now (/aif-commit)
-- [ ] No, stash and continue
-- [ ] Cancel
+AskUserQuestion: You have uncommitted changes. Commit them first?
+
+Options:
+1. Yes, commit now (/aif-commit)
+2. No, stash and continue
+3. Cancel
 ```
+
+**Based on choice:**
+- Yes → run `/aif-commit`, then continue to plan discovery
+- No → `git stash push -m "aif-implement: stash before plan execution"`, then continue
+- Cancel → inform the user: "Implementation cancelled." → **STOP**
 
 **If NO plan file exists but `.ai-factory/FIX_PLAN.md` exists:**
 
@@ -95,21 +102,21 @@ Running /aif-fix to execute the plan...
 **If NO plan file exists AND no FIX_PLAN.md (all tasks completed or fresh start):**
 
 ```
-No active plan found.
-
-Current branch: feature/user-auth
-
+AskUserQuestion: No active plan found. Current branch: <current-branch>.
 What would you like to do?
-- [ ] Start new feature from current branch
-- [ ] Return to main/master and start new feature
-- [ ] Create quick task plan (no branch)
-- [ ] Nothing, just checking status
+
+Options:
+1. Start new feature from current branch
+2. Return to main/master and start new feature
+3. Create quick task plan (no branch)
+4. Nothing, just checking status
 ```
 
 Based on choice:
 - New feature from current → `/aif-plan full <description>`
 - Return to main → `git checkout main`, then `git pull` → `/aif-plan full <description>`
 - Quick task → `/aif-plan fast <description>`
+- Nothing, just checking status → display branch info and recent commits summary → **STOP**
 
 **If plan file exists → continue to Step 0.1**
 
@@ -167,7 +174,7 @@ If any rule is violated — fix the output before presenting it to the user.
 - Apply proper error handling and logging as specified
 - Avoid pitfalls documented in skill-context rules and relevant fallback patches
 
-### Step 0.1: Find Plan File
+### Step 0.2: Find Plan File
 
 **If `$ARGUMENTS` contains `@<path>`:**
 
@@ -320,15 +327,18 @@ If during implementation:
 
 If the plan has commit checkpoints and current task is at a checkpoint:
 ```
-✅ Tasks 1-4 completed.
+AskUserQuestion: ✅ Tasks <first>-<last> completed. This is a commit checkpoint. Ready to commit? Suggested message: "<conventional commit message>"
 
-This is a commit checkpoint. Ready to commit?
-Suggested message: "feat: add base models and types"
-
-- [ ] Yes, commit now (/aif-commit)
-- [ ] No, continue to next task
-- [ ] Skip all commit checkpoints
+Options:
+1. Yes, commit now (/aif-commit)
+2. No, continue to next task
+3. Skip all commit checkpoints
 ```
+
+**Based on choice:**
+- Yes, commit now → invoke `/aif-commit` with the suggested message, then continue to next task
+- No, continue to next task → proceed to the next task without committing
+- Skip all commit checkpoints → remember this choice for the remainder of the session. For all subsequent commit checkpoints in this session, skip the `AskUserQuestion` prompt and proceed directly to the next task (as if user selected "No, continue to next task" each time)
 
 **3.9: Move to next task or pause**
 
@@ -418,32 +428,6 @@ Options:
 2. No — skip
 ```
 
-### Context Cleanup
-
-Context is heavy after implementation. All code changes are saved — suggest freeing space:
-
-```
-AskUserQuestion: Free up context before continuing?
-
-Options:
-1. /clear — Full reset (recommended)
-2. /compact — Compress history
-3. Continue as is
-```
-
-**Suggest verification:**
-
-```
-AskUserQuestion: All tasks complete. Run verification?
-
-Options:
-1. Verify first — Run /aif-verify to check completeness (recommended)
-2. Skip to commit — Go straight to /aif-commit
-```
-
-If user chooses "Verify first" → suggest invoking `/aif-verify`.
-If user chooses "Skip to commit" → suggest invoking `/aif-commit`.
-
 **Documentation policy checkpoint (after completion, before plan cleanup):**
 
 Read the plan file setting `Docs: yes/no`.
@@ -478,10 +462,19 @@ If plan setting is `Docs: no` or setting is unset:
 
 - **If `.ai-factory/PLAN.md`** (from `/aif-plan fast`):
   ```
-  Would you like to delete .ai-factory/PLAN.md? (It's no longer needed)
-  - [ ] Yes, delete it
-  - [ ] No, keep it
+  AskUserQuestion: Would you like to delete .ai-factory/PLAN.md? (It's no longer needed)
+
+  Options:
+  1. Yes, delete it
+  2. No, keep it
   ```
+
+  **Based on choice:**
+  - "Yes, delete it" → delete the file:
+    ```bash
+    rm .ai-factory/PLAN.md
+    ```
+  - "No, keep it" → leave the file as is, continue to the next step
 
 - **If branch-named file** (e.g., `.ai-factory/plans/feature-user-auth.md`):
   - Keep it - documents what was done
@@ -504,9 +497,11 @@ You're working in a parallel worktree.
   Worktree:  <current-directory>
   Main repo: <main-repo-path>
 
-Would you like to merge this branch into main and clean up?
-- [ ] Yes, merge and clean up (recommended)
-- [ ] No, I'll handle it manually
+AskUserQuestion: Would you like to merge this branch into main and clean up?
+
+Options:
+1. Yes, merge and clean up (recommended)
+2. No, I'll handle it manually
 ```
 
 If user chooses **"Yes, merge and clean up"**:
@@ -556,6 +551,8 @@ If user chooses **"Yes, merge and clean up"**:
    You're now in: <main-repo-path> (main)
    ```
 
+→ **STOP** — worktree merged and removed, no further steps needed.
+
 If user chooses **"No, I'll handle it manually"**, show a reminder:
 ```
 To merge and clean up later:
@@ -563,6 +560,24 @@ To merge and clean up later:
   git merge <branch>
   /aif-plan --cleanup <branch>
 ```
+
+### Final Step — Verify or Commit
+
+```
+AskUserQuestion: All tasks complete. What's next?
+
+Options:
+1. Verify first — Run /aif-verify to check completeness (recommended)
+2. Skip to commit — Go straight to /aif-commit
+```
+
+**Based on choice:**
+- "Verify first" → invoke `/aif-verify` → after it completes, continue to context cleanup below
+- "Skip to commit" → invoke `/aif-commit` → after it completes, continue to context cleanup below
+
+**Context cleanup (after verify or commit):**
+
+Suggest the user to free up context space if needed: `/clear` (full reset) or `/compact` (compress history).
 
 **IMPORTANT: NO summary reports, NO analysis documents, NO wrap-up tasks.**
 
