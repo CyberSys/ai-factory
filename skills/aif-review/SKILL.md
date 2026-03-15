@@ -1,7 +1,7 @@
 ---
 name: aif-review
 description: Perform code review on staged changes or a pull request. Checks for bugs, security issues, performance problems, and best practices. Use when user says "review code", "check my code", "review PR", or "is this code okay".
-argument-hint: "[PR number or empty]"
+argument-hint: "[PR number or --commits [base] or empty]"
 allowed-tools: Bash(git *) Bash(gh *) Read Glob Grep
 disable-model-invocation: false
 ---
@@ -23,6 +23,30 @@ Perform thorough code reviews focusing on correctness, security, performance, an
 1. Use `gh pr view <number> --json` to get PR details
 2. Use `gh pr diff <number>` to get the diff
 3. Review all changes in the PR
+
+### With --commits (Review by Commits)
+
+Review changes on the current branch commit-by-commit relative to a base branch.
+
+1. Determine base branch:
+   - If `$ARGUMENTS` contains `--commits <base>`, use `<base>` as the base branch
+   - If only `--commits` without explicit base, auto-detect:
+     - Run `git remote show origin | grep 'HEAD branch'` to find default branch
+     - Fallback to `main`, then `master`
+2. Get the list of commits:
+   ```bash
+   git log --oneline --reverse <base>..HEAD
+   ```
+3. For each commit, get the diff:
+   ```bash
+   git show <commit-hash> --stat
+   git show <commit-hash>
+   ```
+4. Review each commit individually, checking:
+   - Does the commit message match the actual changes?
+   - Are changes atomic (single logical unit per commit)?
+   - Are there any issues introduced in this specific commit?
+5. After reviewing all commits, provide a combined summary with per-commit notes
 
 ## Context Gates (Read-Only)
 
@@ -142,6 +166,12 @@ Review PR #123 using GitHub CLI.
 
 **User:** `/aif-review https://github.com/org/repo/pull/123`
 Review PR from URL.
+
+**User:** `/aif-review --commits`
+Review all commits on the current branch vs auto-detected base branch.
+
+**User:** `/aif-review --commits develop`
+Review all commits on the current branch vs `develop`.
 
 ## Integration
 
