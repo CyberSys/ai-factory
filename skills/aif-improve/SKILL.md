@@ -264,11 +264,18 @@ Tasks analyzed: N
 - Dependencies to fix: N
 - Tasks to remove: N
 
-Apply these improvements?
-- [ ] Yes, apply all
-- [ ] Let me pick which ones
-- [ ] No, keep the plan as is
+AskUserQuestion: Apply these improvements?
+
+Options:
+1. Yes, apply all
+2. Let me pick which ones
+3. No, keep the plan as is
 ```
+
+**Based on choice:**
+- Yes, apply all → apply all improvements to the plan file
+- Let me pick which ones → present each improvement individually for approval
+- No, keep the plan as is → exit without modifications
 
 **If no improvements found:**
 

@@ -338,7 +338,7 @@ Options:
 **Based on choice:**
 - Yes, commit now → invoke `/aif-commit` with the suggested message, then continue to next task
 - No, continue to next task → proceed to the next task without committing
-- Skip all commit checkpoints → remember this choice for the remainder of the session. For all subsequent commit checkpoints in this session, skip the `AskUserQuestion` prompt and proceed directly to the next task (as if user selected "No, continue to next task" each time)
+- Skip all commit checkpoints → for all subsequent checkpoints within this `/aif-implement` run, skip the prompt automatically and proceed directly to the next task (as if user selected "No, continue to next task" each time). This is in-context memory — resets on `/clear` or new session
 
 **3.9: Move to next task or pause**
 

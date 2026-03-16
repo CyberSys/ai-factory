@@ -166,21 +166,21 @@ Examples:
 AskUserQuestion: Before we start, a few questions:
 
 1. Should I write tests for this feature?
-   - [ ] Yes, write tests
-   - [ ] No, skip tests
+   a. Yes, write tests
+   b. No, skip tests
 
 2. Logging level for implementation:
-   - [ ] Verbose (recommended) - detailed DEBUG logs for development
-   - [ ] Standard - INFO level, key events only
-   - [ ] Minimal - only WARN/ERROR
+   a. Verbose (recommended) - detailed DEBUG logs for development
+   b. Standard - INFO level, key events only
+   c. Minimal - only WARN/ERROR
 
 3. Documentation policy after implementation?
-   - [ ] Yes — mandatory docs checkpoint at completion (recommended)
-   - [ ] No — warn-only (`WARN [docs]`), no mandatory checkpoint
+   a. Yes — mandatory docs checkpoint at completion (recommended)
+   b. No — warn-only (`WARN [docs]`), no mandatory checkpoint
 
 4. Roadmap milestone linkage (only if `.ai-factory/ROADMAP.md` exists):
-   - [ ] Link this plan to a milestone
-   - [ ] Skip — no linkage (allowed; `/aif-verify --strict` should report WARN, not fail, for missing linkage alone)
+   a. Link this plan to a milestone
+   b. Skip — no linkage (allowed; `/aif-verify --strict` should report WARN, not fail, for missing linkage alone)
 
 5. Any specific requirements or constraints?
 ```
@@ -305,14 +305,14 @@ Ask a shorter set of questions:
 AskUserQuestion: Before we start:
 
 1. Should I include tests in the plan?
-   - [ ] Yes, include tests
-   - [ ] No, skip tests
+   a. Yes, include tests
+   b. No, skip tests
 
 2. Any specific requirements or constraints?
 
 3. Roadmap milestone linkage (only if `.ai-factory/ROADMAP.md` exists):
-   - [ ] Link this plan to a milestone
-   - [ ] Skip — no linkage (allowed; `/aif-verify --strict` should report WARN, not fail, for missing linkage alone)
+   a. Link this plan to a milestone
+   b. Skip — no linkage (allowed; `/aif-verify --strict` should report WARN, not fail, for missing linkage alone)
 ```
 
 **Plan file:** Always `.ai-factory/PLAN.md` (no branch, no branch-named file).

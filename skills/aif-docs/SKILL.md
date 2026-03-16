@@ -91,15 +91,18 @@ State C: README.md + docs/ exist     → Depends on flags (see below)
 ```
 Documentation already exists (README.md + docs/).
 
-What would you like to do?
-- [ ] Generate HTML only — build site from current docs as-is
-- [ ] Audit & improve first — check for issues, then generate HTML
-- [ ] Audit only — check for issues without generating HTML
+AskUserQuestion: What would you like to do?
+
+Options:
+1. Generate HTML only — build site from current docs as-is
+2. Audit & improve first — check for issues, then generate HTML
+3. Audit only — check for issues without generating HTML
 ```
 
-- **"Generate HTML only"** → skip Step 1.1, Step 2, Step 4 — go directly to Step 3 (HTML generation), then done
-- **"Audit & improve first"** → run Step 1.1 → Step 2 (State C) → Step 3 → Step 4 → Step 4.1
-- **"Audit only"** → run Step 1.1 → Step 2 (State C) → Step 4 → Step 4.1 (skip Step 3)
+**Based on choice:**
+- Generate HTML only → skip Step 1.1, Step 2, Step 4 — go directly to Step 3 (HTML generation), then done
+- Audit & improve first → run Step 1.1 → Step 2 (State C) → Step 3 → Step 4 → Step 4.1
+- Audit only → run Step 1.1 → Step 2 (State C) → Step 4 → Step 4.1 (skip Step 3)
 
 **State C without `--web` flag** → run Step 2 (State C) as usual.
 
@@ -142,11 +145,18 @@ Suggested actions:
   → Move DEPLOYMENT.md → docs/deployment.md
   → Merge SETUP.md into docs/getting-started.md
 
-Would you like to:
-- [ ] Apply all suggestions
-- [ ] Let me pick which ones
-- [ ] Skip — keep files where they are
+AskUserQuestion: Would you like to apply the consolidation?
+
+Options:
+1. Apply all suggestions
+2. Let me pick which ones
+3. Skip — keep files where they are
 ```
+
+**Based on choice:**
+- Apply all suggestions → move/merge all listed files, continue to Step 2
+- Let me pick which ones → present each file individually for approval, apply selected
+- Skip → leave files where they are, continue to Step 2
 
 **When moving/merging:**
 1. Create the target file in `docs/` with prev/next navigation header (following Documentation table order) and "See Also" footer
@@ -191,11 +201,18 @@ I've analyzed your project and suggest these documentation pages:
 3. api.md — API endpoints reference
 4. configuration.md — Environment variables and config
 
-Would you like to:
-- [ ] Generate all of these
-- [ ] Let me pick which ones
-- [ ] Add more topics
+AskUserQuestion: Would you like to generate these documentation pages?
+
+Options:
+1. Generate all of these
+2. Let me pick which ones
+3. Add more topics
 ```
+
+**Based on choice:**
+- Generate all → proceed to generate README.md and all listed docs/ files
+- Let me pick → present each topic for individual approval, generate only approved
+- Add more topics → ask what additional topics to include, confirm final list, then generate
 
 #### 2.2: Generate README.md
 
@@ -458,11 +475,18 @@ The following root files have been incorporated into docs/:
   DEPLOYMENT.md → now in docs/deployment.md
   SETUP.md → merged into docs/getting-started.md
 
-These originals are no longer needed. Delete them?
-- [ ] Yes, delete all originals
-- [ ] Let me pick which ones to delete
-- [ ] No, keep them (I'll clean up later)
+AskUserQuestion: These originals are no longer needed. Delete them?
+
+Options:
+1. Yes, delete all originals
+2. Let me pick which ones to delete
+3. No, keep them (I'll clean up later)
 ```
+
+**Based on choice:**
+- Yes, delete all → delete all listed originals (see "When deleting" below)
+- Let me pick → present each file individually, delete only approved
+- No, keep them → leave originals in place, continue to Step 5
 
 **When deleting:**
 1. Verify one more time that the target docs/ file contains all content from the original
