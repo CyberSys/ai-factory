@@ -45,7 +45,15 @@
 
 The `agents` array can include any supported agent IDs: `claude`, `cursor`, `windsurf`, `roocode`, `kilocode`, `antigravity`, `opencode`, `warp`, `zencoder`, `codex`, `copilot`, `gemini`, `junie`, or `universal`. Each agent keeps its own `skillsDir`, installed skills list, and MCP preferences.
 
-The optional `extensions` array tracks installed extensions by name, original source, and version.
+The optional `extensions` array tracks installed extensions by name, original source, and version. `ai-factory update` now refreshes these extensions from their saved sources before base-skill updates, and `ai-factory extension update [name] --force` refreshes them without running the full base-skill update flow.
+
+Extension refresh uses the saved `source` field:
+
+- npm sources are checked against the npm registry and skipped when the published version is unchanged
+- GitHub sources fetch `extension.json` through the GitHub API before cloning
+- local paths and non-GitHub git sources require `--force` for refresh
+
+When GitHub-backed extension refreshes are frequent, set `GITHUB_TOKEN` to raise the GitHub API rate limit used by these checks.
 
 ## MCP Configuration
 

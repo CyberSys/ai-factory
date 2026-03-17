@@ -80,13 +80,22 @@ ai-factory extension add ./my-extension
 # List installed extensions
 ai-factory extension list
 
+# Update extensions from their sources
+ai-factory extension update
+
+# Update a specific extension (use --force to refresh unchanged versions)
+ai-factory extension update my-extension --force
+
 # Remove extension
 ai-factory extension remove my-extension
 ```
 
 For v1 -> v2 migration, run `ai-factory upgrade` to rename old skills to the new `aif-*` prefix.
 
-`ai-factory update` now prints per-agent status buckets for base skills (`changed`, `unchanged`, `skipped`, `removed`). Skills newly available in the package but not previously installed are shown as `skipped` (not auto-installed).
+`ai-factory update` now:
+- Checks for extension updates from their sources (npm, GitHub, etc.) before updating base skills
+- Prints per-agent status buckets for base skills (`changed`, `unchanged`, `skipped`, `removed`)
+- Skills newly available in the package but not previously installed are shown as `skipped` (not auto-installed)
 
 ## Next Steps
 

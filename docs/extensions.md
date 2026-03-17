@@ -25,6 +25,15 @@ ai-factory extension add aif-ext-example
 # List installed extensions
 ai-factory extension list
 
+# Update extensions from their sources
+ai-factory extension update
+
+# Update a specific extension
+ai-factory extension update aif-ext-example
+
+# Force refresh even if version unchanged
+ai-factory extension update --force
+
 # Remove an extension (cleans up injections, MCP servers, and files)
 ai-factory extension remove aif-ext-example
 ```
@@ -40,9 +49,66 @@ ai-factory extension remove aif-ext-example
 
 ### What Happens on Update
 
-Running `ai-factory update` updates previously installed base skills, reports per-agent status (`changed`, `unchanged`, `skipped`, `removed`), skips base skills replaced by extensions, re-installs replacement skills, then **re-applies all extension injections** automatically. MCP server configs and custom commands are not affected by updates.
+Running `ai-factory update`:
 
-`ai-factory update --force` performs a clean reinstall of currently installed base skills before extension replacement and injection re-apply. Replaced skills are still handled by extension manifests, and custom extension commands/MCP config remain intact.
+1. **Self-update check** — prompts to update the CLI if a newer version exists
+2. **Extension refresh** — checks installed extensions for updates from their sources:
+   - npm packages: queries registry for latest version
+   - GitHub repos: fetches `extension.json` via GitHub API (faster than cloning)
+   - Local paths: requires `--force` to refresh
+   - Extensions with unchanged versions are skipped
+3. **Base skill update** — updates installed base skills, reports per-agent status (`changed`, `unchanged`, `skipped`, `removed`)
+4. **Reinstall replacement skills** — re-installs skills from extension manifests
+5. **Re-apply injections** — re-applies all extension injections automatically
+
+`ai-factory update --force` forces a clean reinstall of base skills AND forces extension refresh regardless of version changes.
+
+#### Extension Update Behavior
+
+| Source Type | Version Check | `--force` Behavior |
+|-------------|---------------|-------------------|
+| npm | Registry lookup, skip if unchanged | Always re-download |
+| GitHub | API fetch of `extension.json`, skip if unchanged | Always re-clone |
+| GitLab / other git | Requires `--force` | Always re-clone |
+| Local path | Requires `--force` | Re-copy from source |
+
+#### GitHub API Rate Limits
+
+GitHub API requests use `GITHUB_TOKEN` if present (5000 req/hr). Without a token, you're limited to 60 req/hr. If rate-limited, the extension refresh is skipped with a warning — the broader `update` continues.
+
+```bash
+# Set GITHUB_TOKEN for higher rate limits
+export GITHUB_TOKEN=ghp_xxxx
+ai-factory update
+```
+
+### Updating Extensions Separately
+
+Use `ai-factory extension update` to refresh extensions without updating base skills:
+
+```bash
+# Update all extensions
+ai-factory extension update
+
+# Update a specific extension
+ai-factory extension update aif-ext-example
+
+# Force refresh regardless of version
+ai-factory extension update --force
+```
+
+The command outputs per-extension status:
+
+```
+✓ aif-ext-example: v1.0.0 → v1.1.0
+- aif-ext-other: v1.0.0 (unchanged)
+⚠ aif-ext-local: source type requires --force
+
+Summary:
+  Updated: 1
+  Unchanged: 1
+  Skipped: 1
+```
 
 ### What Happens on Remove
 
