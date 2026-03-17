@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import * as semver from 'semver';
 import { readJsonFile, removeDirectory, ensureDir } from '../utils/fs.js';
 import type { McpServerConfig } from './mcp.js';
 
@@ -58,8 +59,6 @@ export interface NpmVersionCheckResult {
   reason: 'force' | 'version-changed' | 'unchanged' | 'lookup-failed';
 }
 
-const SEMVER_PATTERN = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
-
 let githubAuthModeLogged = false;
 
 function shouldLog(level: ExtensionLogLevel): boolean {
@@ -93,7 +92,7 @@ function logExtension(level: ExtensionLogLevel, message: string, context?: Recor
 }
 
 function isValidVersionString(version: string): boolean {
-  return SEMVER_PATTERN.test(version);
+  return semver.valid(version) !== null;
 }
 
 function logGitHubAuthModeOnce(hasToken: boolean): void {
@@ -348,108 +347,47 @@ export function classifyExtensionSource(source: string): ExtensionSourceType {
   return 'npm';
 }
 
-export function parseExtensionVersion(version: string): { parts: number[]; prerelease: string | null } {
-  const [core, ...rest] = version.split('-');
-
-  return {
-    parts: core.split('.').map(part => Number(part)),
-    prerelease: rest.length > 0 ? rest.join('-') : null,
-  };
-}
-
 export function compareExtensionVersions(left: string, right: string): number {
-  const parsedLeft = parseExtensionVersion(left);
-  const parsedRight = parseExtensionVersion(right);
+  logExtension('debug', 'Comparing extension versions', {
+    left,
+    right,
+  });
 
-  for (let index = 0; index < 3; index++) {
-    const leftPart = parsedLeft.parts[index] ?? 0;
-    const rightPart = parsedRight.parts[index] ?? 0;
+  const leftValid = semver.valid(left);
+  const rightValid = semver.valid(right);
 
-    if (leftPart > rightPart) {
-      return 1;
-    }
-
-    if (leftPart < rightPart) {
-      return -1;
-    }
-  }
-
-  if (parsedLeft.prerelease && !parsedRight.prerelease) {
-    return -1;
-  }
-
-  if (!parsedLeft.prerelease && parsedRight.prerelease) {
-    return 1;
-  }
-
-  if (parsedLeft.prerelease === parsedRight.prerelease) {
+  if (!leftValid && !rightValid) {
+    logExtension('warn', 'Both extension versions are invalid for comparison', {
+      left,
+      right,
+    });
     return 0;
   }
 
-  if (parsedLeft.prerelease && parsedRight.prerelease) {
-    return comparePrereleaseStrings(parsedLeft.prerelease, parsedRight.prerelease);
+  if (!leftValid) {
+    logExtension('warn', 'Left extension version is invalid for comparison', {
+      left,
+      right,
+    });
+    return -1;
   }
 
-  return 0;
-}
-
-function comparePrereleaseStrings(left: string, right: string): number {
-  const leftParts = splitPrereleaseParts(left);
-  const rightParts = splitPrereleaseParts(right);
-
-  const maxLen = Math.max(leftParts.length, rightParts.length);
-
-  for (let index = 0; index < maxLen; index++) {
-    const leftPart = leftParts[index];
-    const rightPart = rightParts[index];
-
-    if (leftPart === undefined) {
-      return -1;
-    }
-
-    if (rightPart === undefined) {
-      return 1;
-    }
-
-    const leftIsNum = typeof leftPart === 'number';
-    const rightIsNum = typeof rightPart === 'number';
-
-    if (leftIsNum && rightIsNum) {
-      if (leftPart > rightPart) {
-        return 1;
-      }
-
-      if (leftPart < rightPart) {
-        return -1;
-      }
-
-      continue;
-    }
-
-    if (leftIsNum) {
-      return 1;
-    }
-
-    if (rightIsNum) {
-      return -1;
-    }
-
-    const cmp = String(leftPart).localeCompare(String(rightPart));
-
-    if (cmp !== 0) {
-      return cmp;
-    }
+  if (!rightValid) {
+    logExtension('warn', 'Right extension version is invalid for comparison', {
+      left,
+      right,
+    });
+    return 1;
   }
 
-  return 0;
-}
-
-function splitPrereleaseParts(prerelease: string): Array<string | number> {
-  return prerelease.split('.').map((part) => {
-    const num = Number(part);
-
-    return Number.isInteger(num) ? num : part;
+  const result = semver.compare(leftValid, rightValid);
+  logExtension('debug', 'Extension version comparison result', {
+    left: leftValid,
+    right: rightValid,
+    result,
   });
+
+  return result;
 }
 
 export function parseGitSource(source: string): ParsedGitSource {
@@ -799,7 +737,7 @@ async function resolveFromGit(projectDir: string, url: string): Promise<Resolved
   await removeDirectory(tmpDir);
 
   const manifestFromApi = await fetchGitHubExtensionManifest(url);
-  if (!manifestFromApi && !gitSource.isGitHub) {
+  if (!manifestFromApi.manifest && !gitSource.isGitHub) {
     logExtension('debug', 'Using git clone fallback for non-GitHub extension metadata', {
       sourceType,
       host: gitSource.host,
@@ -828,7 +766,7 @@ async function resolveFromGit(projectDir: string, url: string): Promise<Resolved
     repo: gitSource.repo,
     ref: gitSource.ref,
     latestVersion: manifest.version,
-    metadataSource: manifestFromApi ? 'github-api+clone' : 'clone',
+    metadataSource: manifestFromApi.manifest ? 'github-api+clone' : 'clone',
   });
 
   return { manifest, sourceDir: tmpDir, tempDir: tmpDir, cleanup: () => removeDirectory(tmpDir) };

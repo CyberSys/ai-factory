@@ -52,8 +52,12 @@
   ],
   "knip": {
     "ignoreExportsUsedInFile": true,
-    "exclude": ["types"],
-    "ignore": ["examples/**"]
+    "exclude": [
+      "types"
+    ],
+    "ignore": [
+      "examples/**"
+    ]
   },
   "engines": {
     "node": ">=18.0.0"
@@ -62,12 +66,14 @@
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "fs-extra": "^11.2.0",
-    "inquirer": "^9.2.15"
+    "inquirer": "^9.2.15",
+    "semver": "^7.7.4"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.11.0",
+    "@types/semver": "^7.7.1",
     "knip": "^5.85.0",
     "typescript": "^5.3.3"
   }
