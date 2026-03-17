@@ -320,7 +320,12 @@ function isGitUrl(source: string): boolean {
 }
 
 function isLocalPath(source: string): boolean {
-  return source.startsWith('./') || source.startsWith('/') || source.startsWith('../') || path.isAbsolute(source);
+  return source.startsWith('./')
+    || source.startsWith('.\\')
+    || source.startsWith('/')
+    || source.startsWith('../')
+    || source.startsWith('..\\')
+    || path.isAbsolute(source);
 }
 
 export function classifyExtensionSource(source: string): ExtensionSourceType {
@@ -574,12 +579,13 @@ export async function resolveExtensionVersion(
     if (sourceType === 'github') {
       const gitSource = parseGitSource(source);
       const manifest = await fetchGitHubExtensionManifest(source);
-      if (!manifest) {
+      if (manifest) {
         return {
-          status: 'failed',
+          status: 'resolved',
           sourceType,
           source,
-          failureReason: 'Could not fetch GitHub extension manifest metadata',
+          latestVersion: manifest.version,
+          manifest,
           metadata: {
             host: gitSource.host ?? undefined,
             owner: gitSource.owner ?? undefined,
@@ -589,19 +595,32 @@ export async function resolveExtensionVersion(
         };
       }
 
-      return {
-        status: 'resolved',
+      logExtension('warn', 'GitHub metadata unavailable, falling back to git clone for version resolution', {
         sourceType,
-        source,
-        latestVersion: manifest.version,
-        manifest,
-        metadata: {
-          host: gitSource.host ?? undefined,
-          owner: gitSource.owner ?? undefined,
-          repo: gitSource.repo ?? undefined,
-          ref: gitSource.ref ?? undefined,
-        },
-      };
+        host: gitSource.host,
+        owner: gitSource.owner,
+        repo: gitSource.repo,
+        ref: gitSource.ref,
+      });
+
+      const resolved = await resolveFromGit(projectDir, source);
+      try {
+        return {
+          status: 'resolved',
+          sourceType,
+          source,
+          latestVersion: resolved.manifest.version,
+          manifest: resolved.manifest,
+          metadata: {
+            host: gitSource.host ?? undefined,
+            owner: gitSource.owner ?? undefined,
+            repo: gitSource.repo ?? undefined,
+            ref: gitSource.ref ?? undefined,
+          },
+        };
+      } finally {
+        await resolved.cleanup();
+      }
     }
 
     return {

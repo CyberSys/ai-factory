@@ -13,8 +13,8 @@ import {
 } from './extensions.js';
 import { installSkills, getAvailableSkills, installExtensionSkills, removeExtensionSkills } from './installer.js';
 import { applySingleExtensionInjections, stripAllExtensionInjections, stripInjectionsByExtensionName } from './injections.js';
-import { configureExtensionMcpServers, validateMcpTemplate, type McpServerConfig } from './mcp.js';
-import { readJsonFile } from '../utils/fs.js';
+import { configureExtensionMcpServers, removeExtensionMcpServers, validateMcpTemplate, type McpServerConfig } from './mcp.js';
+import { copyDirectory, ensureDir, fileExists, readJsonFile, removeDirectory } from '../utils/fs.js';
 
 export interface ExtensionAssetInstallResult {
   replacedSkills: string[];
@@ -35,6 +35,14 @@ export interface CommitResolvedExtensionOptions {
   source: string;
   resolved: ResolvedExtension;
   log?: (level: 'info' | 'warn', message: string) => void;
+}
+
+interface ExtensionInstallRollbackContext {
+  extensionDir: string;
+  backupDir: string | null;
+  oldRecord: ExtensionRecord | null;
+  oldManifest: ExtensionManifest | null;
+  newManifest: ExtensionManifest;
 }
 
 /**
@@ -149,6 +157,13 @@ export async function removePreviousExtensionState(
 ): Promise<void> {
   await stripInjectionsForAllAgents(projectDir, agents, extensionName, oldManifest);
 
+  if (oldManifest?.mcpServers?.length) {
+    const mcpKeys = oldManifest.mcpServers.map(server => server.key);
+    for (const agent of agents) {
+      await removeExtensionMcpServers(projectDir, agent.id, mcpKeys);
+    }
+  }
+
   if (oldRecord?.replacedSkills?.length) {
     await removeSkillsForAllAgents(projectDir, agents, oldRecord.replacedSkills);
     await restoreBaseSkills(projectDir, agents, oldRecord.replacedSkills, new Set());
@@ -157,6 +172,43 @@ export async function removePreviousExtensionState(
   if (oldManifest) {
     await removeCustomSkillsForAllAgents(projectDir, agents, oldManifest);
   }
+}
+
+async function cleanupPartialExtensionState(
+  projectDir: string,
+  agents: AgentInstallation[],
+  extensionName: string,
+  manifest: ExtensionManifest,
+): Promise<void> {
+  const partialRecord: ExtensionRecord = {
+    name: extensionName,
+    source: '',
+    version: manifest.version,
+    replacedSkills: manifest.replaces ? Object.values(manifest.replaces) : undefined,
+  };
+
+  await removePreviousExtensionState(projectDir, agents, extensionName, partialRecord, manifest);
+}
+
+async function rollbackFailedExtensionInstall(
+  projectDir: string,
+  agents: AgentInstallation[],
+  context: ExtensionInstallRollbackContext,
+): Promise<void> {
+  await cleanupPartialExtensionState(projectDir, agents, context.newManifest.name, context.newManifest);
+
+  if (context.backupDir) {
+    await removeDirectory(context.extensionDir);
+    await ensureDir(path.dirname(context.extensionDir));
+    await copyDirectory(context.backupDir, context.extensionDir);
+
+    if (context.oldManifest) {
+      await installExtensionAssetsForAllAgents(projectDir, agents, context.extensionDir, context.oldManifest);
+    }
+    return;
+  }
+
+  await removeDirectory(context.extensionDir);
 }
 
 /**
@@ -320,21 +372,48 @@ export async function commitResolvedExtension(
   const manifest = resolved.manifest;
   const extensions = config.extensions ?? [];
   const existIdx = extensions.findIndex(ext => ext.name === manifest.name);
+  const extensionDir = path.join(getExtensionsDir(projectDir), manifest.name);
+  const backupCandidateDir = existIdx >= 0
+    ? path.join(getExtensionsDir(projectDir), `.backup-${manifest.name}-${Date.now()}`)
+    : null;
   const oldRecord = existIdx >= 0 ? { ...extensions[existIdx] } : null;
   const oldManifest = existIdx >= 0
-    ? await loadExtensionManifest(path.join(getExtensionsDir(projectDir), manifest.name))
+    ? await loadExtensionManifest(extensionDir)
     : null;
 
   assertNoReplacementConflicts(extensions, manifest, manifest.name);
 
-  await commitExtensionInstall(projectDir, resolved);
-
-  if (existIdx >= 0) {
-    await removePreviousExtensionState(projectDir, config.agents, manifest.name, oldRecord, oldManifest);
+  let backupDir: string | null = null;
+  if (backupCandidateDir && await fileExists(extensionDir)) {
+    await removeDirectory(backupCandidateDir);
+    await copyDirectory(extensionDir, backupCandidateDir);
+    backupDir = backupCandidateDir;
   }
 
-  const extensionDir = path.join(getExtensionsDir(projectDir), manifest.name);
-  const assetInstall = await installExtensionAssetsForAllAgents(projectDir, config.agents, extensionDir, manifest);
+  let assetInstall: ExtensionAssetInstallResult;
+
+  try {
+    await commitExtensionInstall(projectDir, resolved);
+
+    if (existIdx >= 0) {
+      await removePreviousExtensionState(projectDir, config.agents, manifest.name, oldRecord, oldManifest);
+    }
+
+    assetInstall = await installExtensionAssetsForAllAgents(projectDir, config.agents, extensionDir, manifest);
+  } catch (error) {
+    await rollbackFailedExtensionInstall(projectDir, config.agents, {
+      extensionDir,
+      backupDir,
+      oldRecord,
+      oldManifest,
+      newManifest: manifest,
+    });
+    throw error;
+  } finally {
+    if (backupDir) {
+      await removeDirectory(backupDir);
+    }
+  }
 
   for (const outcome of assetInstall.replacementOutcomes) {
     if (outcome.status === 'installed') {
