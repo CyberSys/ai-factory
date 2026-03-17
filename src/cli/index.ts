@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { updateCommand } from './commands/update.js';
 import { upgradeCommand } from './commands/upgrade.js';
-import { extensionAddCommand, extensionRemoveCommand, extensionListCommand } from './commands/extension.js';
+import { extensionAddCommand, extensionRemoveCommand, extensionListCommand, extensionUpdateCommand } from './commands/extension.js';
 import { getCurrentVersion, loadConfig } from '../core/config.js';
 import { loadAllExtensions } from '../core/extensions.js';
 
@@ -47,6 +47,12 @@ ext
   .command('list')
   .description('List installed extensions')
   .action(extensionListCommand);
+
+ext
+  .command('update [name]')
+  .description('Update extension(s) from their sources')
+  .option('--force', 'Force refresh even if version unchanged')
+  .action(extensionUpdateCommand);
 
 async function loadExtensionCommands(): Promise<void> {
   try {

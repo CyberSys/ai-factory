@@ -4,13 +4,14 @@ import {realpathSync} from 'fs';
 import {execSync} from 'child_process';
 import inquirer from 'inquirer';
 import {getCurrentVersion, loadConfig, saveConfig} from '../../core/config.js';
+import {compareExtensionVersions, getExtensionsDir, getNpmVersionCheckResult, loadExtensionManifest} from '../../core/extensions.js';
 import {buildManagedSkillsState, getAvailableSkills, partitionSkills, type SkillUpdateEntry, updateSkills} from '../../core/installer.js';
 import {applyExtensionInjections} from '../../core/injections.js';
-import {getExtensionsDir, loadExtensionManifest} from '../../core/extensions.js';
 import {
   installExtensionSkillsForAllAgents,
   installSkillsForAllAgents,
   collectReplacedSkills,
+  refreshExtensions,
 } from '../../core/extension-ops.js';
 import {fileExists} from '../../utils/fs.js';
 
@@ -54,39 +55,13 @@ function groupEntriesByStatus(entries: SkillUpdateEntry[]): Record<'changed' | '
   };
 }
 
-function parseVersion(v: string): { parts: number[]; prerelease: string | null } {
-  const [core, ...rest] = v.split('-');
-  return {
-    parts: core.split('.').map(Number),
-    prerelease: rest.length > 0 ? rest.join('-') : null,
-  };
-}
-
 function isNewerVersion(latest: string, current: string): boolean {
-  const l = parseVersion(latest);
-  const c = parseVersion(current);
-  for (let i = 0; i < 3; i++) {
-    if ((l.parts[i] ?? 0) > (c.parts[i] ?? 0)) return true;
-    if ((l.parts[i] ?? 0) < (c.parts[i] ?? 0)) return false;
-  }
-  // Equal major.minor.patch: prerelease is older than stable (semver §11)
-  if (c.prerelease && !l.prerelease) return true;
-  if (!c.prerelease && l.prerelease) return false;
-  return false;
+  return compareExtensionVersions(latest, current) > 0;
 }
 
 async function getLatestVersion(): Promise<string | null> {
-  try {
-    const response = await fetch('https://registry.npmjs.org/ai-factory/latest', {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) return null;
-    const data = await response.json() as {version: string};
-    if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(data.version)) return null;
-    return data.version;
-  } catch {
-    return null;
-  }
+  const versionCheck = await getNpmVersionCheckResult('ai-factory', getCurrentVersion());
+  return versionCheck.latestVersion;
 }
 
 function getInstallCommand(version: string): string {
@@ -177,8 +152,40 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
   const selfUpdated = await selfUpdate(currentVersion);
   if (selfUpdated) return;
 
+  const extensions = config.extensions ?? [];
+
   if (force) {
     console.log(chalk.yellow('⚠ Force mode enabled: clean reinstall of installed base skills\n'));
+  }
+
+  if (extensions.length > 0) {
+    console.log(chalk.dim('Refreshing extensions...\n'));
+
+    const extensionSummary = await refreshExtensions(projectDir, config, { force });
+
+    if (extensionSummary.updated.length > 0) {
+      for (const r of extensionSummary.updated) {
+        console.log(chalk.green(`  ✓ ${r.name}: v${r.oldVersion} → v${r.newVersion}`));
+      }
+    }
+
+    for (const r of extensionSummary.skipped) {
+      if (r.failureReason === 'rate-limited') {
+        console.log(chalk.yellow(`  ⚠ ${r.name}: GitHub API rate limited`));
+      } else if (r.failureReason === 'source-type-requires-force') {
+        console.log(chalk.dim(`  - ${r.name}: source type requires --force`));
+      }
+    }
+
+    for (const r of extensionSummary.failed) {
+      console.log(chalk.yellow(`  ⚠ ${r.name}: ${r.failureReason}`));
+    }
+
+    console.log(
+      chalk.dim(
+        `Extensions: ${extensionSummary.updated.length} updated, ${extensionSummary.unchanged.length} unchanged, ${extensionSummary.failed.length} failed\n`,
+      ),
+    );
   }
 
   console.log(chalk.dim('Updating skills...\n'));
@@ -187,7 +194,6 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
     const availableSkills = await getAvailableSkills();
     const entriesByAgent = new Map<string, SkillUpdateEntry[]>();
 
-    const extensions = config.extensions ?? [];
     const allReplacedSkills = collectReplacedSkills(extensions);
 
     if (allReplacedSkills.size > 0) {
