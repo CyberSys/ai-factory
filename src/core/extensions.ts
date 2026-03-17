@@ -3,6 +3,207 @@ import fs from 'fs-extra';
 import { readJsonFile, removeDirectory, ensureDir } from '../utils/fs.js';
 import type { McpServerConfig } from './mcp.js';
 
+type ExtensionLogLevel = 'debug' | 'info' | 'warn';
+
+export type ExtensionSourceType = 'local' | 'npm' | 'github' | 'gitlab' | 'git';
+
+export interface ParsedGitSource {
+  host: string | null;
+  owner: string | null;
+  repo: string | null;
+  ref: string | null;
+  cloneUrl: string;
+  isGitHub: boolean;
+  isGitLab: boolean;
+}
+
+export interface ExtensionVersionMetadata {
+  sourceType: ExtensionSourceType;
+  latestVersion: string;
+  manifest: ExtensionManifest;
+  source: string;
+  metadata?: {
+    path?: string;
+    packageName?: string;
+    host?: string;
+    owner?: string;
+    repo?: string;
+    ref?: string;
+  };
+}
+
+export interface ExtensionVersionResolution {
+  status: 'resolved' | 'failed';
+  sourceType: ExtensionSourceType;
+  source: string;
+  latestVersion?: string;
+  manifest?: ExtensionManifest;
+  metadata?: ExtensionVersionMetadata['metadata'];
+  failureReason?: string;
+}
+
+interface NpmRegistryVersionResponse {
+  version: string;
+}
+
+interface GitHubContentsResponse {
+  content?: string;
+  encoding?: string;
+}
+
+export interface NpmVersionCheckResult {
+  packageName: string;
+  latestVersion: string | null;
+  shouldDownload: boolean;
+  reason: 'force' | 'version-changed' | 'unchanged' | 'lookup-failed';
+}
+
+const SEMVER_PATTERN = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
+
+let githubAuthModeLogged = false;
+
+function shouldLog(level: ExtensionLogLevel): boolean {
+  const envLevel = process.env.LOG_LEVEL?.toLowerCase();
+
+  if (envLevel === 'debug') {
+    return true;
+  }
+
+  if (envLevel === 'info') {
+    return level !== 'debug';
+  }
+
+  return level === 'warn';
+}
+
+function logExtension(level: ExtensionLogLevel, message: string, context?: Record<string, unknown>): void {
+  if (!shouldLog(level)) {
+    return;
+  }
+
+  const suffix = context ? ` ${JSON.stringify(context)}` : '';
+  const line = `[extensions] ${message}${suffix}`;
+
+  if (level === 'warn') {
+    console.warn(line);
+    return;
+  }
+
+  console.log(line);
+}
+
+function isValidVersionString(version: string): boolean {
+  return SEMVER_PATTERN.test(version);
+}
+
+function logGitHubAuthModeOnce(hasToken: boolean): void {
+  if (githubAuthModeLogged) {
+    return;
+  }
+
+  githubAuthModeLogged = true;
+  logExtension('info', hasToken ? 'Using authenticated GitHub API requests' : 'Using unauthenticated GitHub API requests', {
+    sourceType: 'github',
+    authMode: hasToken ? 'token' : 'anonymous',
+  });
+}
+
+function isGitHubRateLimited(response: Response): boolean {
+  return response.status === 403 && response.headers.get('x-ratelimit-remaining') === '0';
+}
+
+export async function fetchLatestNpmPackageVersion(packageName: string): Promise<string | null> {
+  const registryUrl = `https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`;
+
+  logExtension('debug', 'Fetching latest npm package version', {
+    sourceType: 'npm',
+    packageName,
+    registryUrl,
+  });
+
+  try {
+    const response = await fetch(registryUrl, {
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      logExtension('warn', 'Failed to fetch npm package metadata', {
+        sourceType: 'npm',
+        packageName,
+        status: response.status,
+      });
+      return null;
+    }
+
+    const data = await response.json() as NpmRegistryVersionResponse;
+    if (typeof data.version !== 'string' || !isValidVersionString(data.version)) {
+      logExtension('warn', 'npm package metadata missing version', {
+        sourceType: 'npm',
+        packageName,
+        latestVersion: data.version,
+      });
+      return null;
+    }
+
+    logExtension('info', 'Fetched latest npm package version', {
+      sourceType: 'npm',
+      packageName,
+      latestVersion: data.version,
+    });
+
+    return data.version;
+  } catch (error) {
+    logExtension('warn', 'npm package version lookup failed', {
+      sourceType: 'npm',
+      packageName,
+      failureReason: (error as Error).message,
+    });
+    return null;
+  }
+}
+
+export async function getNpmVersionCheckResult(
+  packageName: string,
+  currentVersion: string,
+  force = false,
+): Promise<NpmVersionCheckResult> {
+  const latestVersion = await fetchLatestNpmPackageVersion(packageName);
+
+  if (!latestVersion) {
+    return {
+      packageName,
+      latestVersion: null,
+      shouldDownload: force,
+      reason: 'lookup-failed',
+    };
+  }
+
+  if (force) {
+    return {
+      packageName,
+      latestVersion,
+      shouldDownload: true,
+      reason: 'force',
+    };
+  }
+
+  if (compareExtensionVersions(latestVersion, currentVersion) > 0) {
+    return {
+      packageName,
+      latestVersion,
+      shouldDownload: true,
+      reason: 'version-changed',
+    };
+  }
+
+  return {
+    packageName,
+    latestVersion,
+    shouldDownload: false,
+    reason: 'unchanged',
+  };
+}
+
 export interface ExtensionInjection {
   target: string;
   position: 'append' | 'prepend';
@@ -43,6 +244,20 @@ export interface ExtensionManifest {
   mcpServers?: ExtensionMcpServer[];
 }
 
+function validateExtensionManifest(manifest: ExtensionManifest): void {
+  validateExtensionName(manifest.name);
+
+  if (!isValidVersionString(manifest.version)) {
+    throw new Error(`Invalid extension version: "${manifest.version}". Versions must use SemVer format.`);
+  }
+
+  if (manifest.replaces) {
+    for (const baseSkillName of Object.values(manifest.replaces)) {
+      validateSkillName(baseSkillName);
+    }
+  }
+}
+
 const EXTENSIONS_DIR = 'extensions';
 const SAFE_NAME_PATTERN = /^[a-zA-Z0-9_@][\w.@/-]*$/;
 const SAFE_SKILL_NAME_PATTERN = /^[a-zA-Z0-9][\w.-]*$/;
@@ -69,12 +284,7 @@ export async function loadExtensionManifest(extensionDir: string): Promise<Exten
   if (!manifest || !manifest.name || !manifest.version) {
     return null;
   }
-  validateExtensionName(manifest.name);
-  if (manifest.replaces) {
-    for (const baseSkillName of Object.values(manifest.replaces)) {
-      validateSkillName(baseSkillName);
-    }
-  }
+  validateExtensionManifest(manifest);
   return manifest;
 }
 
@@ -113,6 +323,197 @@ function isLocalPath(source: string): boolean {
   return source.startsWith('./') || source.startsWith('/') || source.startsWith('../') || path.isAbsolute(source);
 }
 
+export function classifyExtensionSource(source: string): ExtensionSourceType {
+  if (isLocalPath(source)) {
+    return 'local';
+  }
+
+  if (source.includes('github.com/')) {
+    return 'github';
+  }
+
+  if (source.includes('gitlab.com/')) {
+    return 'gitlab';
+  }
+
+  if (isGitUrl(source)) {
+    return 'git';
+  }
+
+  return 'npm';
+}
+
+export function parseExtensionVersion(version: string): { parts: number[]; prerelease: string | null } {
+  const [core, ...rest] = version.split('-');
+
+  return {
+    parts: core.split('.').map(part => Number(part)),
+    prerelease: rest.length > 0 ? rest.join('-') : null,
+  };
+}
+
+export function compareExtensionVersions(left: string, right: string): number {
+  const parsedLeft = parseExtensionVersion(left);
+  const parsedRight = parseExtensionVersion(right);
+
+  for (let index = 0; index < 3; index++) {
+    const leftPart = parsedLeft.parts[index] ?? 0;
+    const rightPart = parsedRight.parts[index] ?? 0;
+
+    if (leftPart > rightPart) {
+      return 1;
+    }
+
+    if (leftPart < rightPart) {
+      return -1;
+    }
+  }
+
+  if (parsedLeft.prerelease && !parsedRight.prerelease) {
+    return -1;
+  }
+
+  if (!parsedLeft.prerelease && parsedRight.prerelease) {
+    return 1;
+  }
+
+  if (parsedLeft.prerelease === parsedRight.prerelease) {
+    return 0;
+  }
+
+  return parsedLeft.prerelease && parsedRight.prerelease
+    ? parsedLeft.prerelease.localeCompare(parsedRight.prerelease)
+    : 0;
+}
+
+export function parseGitSource(source: string): ParsedGitSource {
+  const withoutPrefix = source.replace(/^git\+/, '');
+  const [cloneCandidate, refCandidate] = withoutPrefix.split('#', 2);
+  const cloneUrl = cloneCandidate.replace(/^git@github\.com:/, 'https://github.com/');
+  const normalizedUrl = cloneUrl.replace(/^git@gitlab\.com:/, 'https://gitlab.com/');
+
+  let host: string | null = null;
+  let owner: string | null = null;
+  let repo: string | null = null;
+
+  try {
+    const url = new URL(normalizedUrl);
+    host = url.hostname;
+    const segments = url.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/').filter(Boolean);
+    owner = segments[0] ?? null;
+    repo = segments[1] ?? null;
+  } catch {
+    const sshMatch = normalizedUrl.match(/^(?:ssh:\/\/)?git@([^/:]+)[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
+    if (sshMatch) {
+      host = sshMatch[1] ?? null;
+      owner = sshMatch[2] ?? null;
+      repo = sshMatch[3] ?? null;
+    }
+  }
+
+  const isGitHub = host === 'github.com';
+  const isGitLab = host === 'gitlab.com';
+
+  return {
+    host,
+    owner,
+    repo,
+    ref: refCandidate ?? null,
+    cloneUrl: cloneCandidate,
+    isGitHub,
+    isGitLab,
+  };
+}
+
+async function fetchGitHubExtensionManifest(source: string): Promise<ExtensionManifest | null> {
+  const gitSource = parseGitSource(source);
+
+  if (!gitSource.isGitHub || !gitSource.owner || !gitSource.repo) {
+    return null;
+  }
+
+  const token = process.env.GITHUB_TOKEN?.trim();
+  logGitHubAuthModeOnce(Boolean(token));
+
+  const contentsUrl = new URL(`https://api.github.com/repos/${gitSource.owner}/${gitSource.repo}/contents/extension.json`);
+  if (gitSource.ref) {
+    contentsUrl.searchParams.set('ref', gitSource.ref);
+  }
+
+  logExtension('debug', 'Fetching extension manifest via GitHub API', {
+    sourceType: 'github',
+    owner: gitSource.owner,
+    repo: gitSource.repo,
+    ref: gitSource.ref,
+    contentsUrl: contentsUrl.toString(),
+  });
+
+  try {
+    const response = await fetch(contentsUrl, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (isGitHubRateLimited(response)) {
+      logExtension('warn', 'GitHub API rate limit reached while fetching extension metadata', {
+        sourceType: 'github',
+        owner: gitSource.owner,
+        repo: gitSource.repo,
+        ref: gitSource.ref,
+        hint: token ? 'retry later or investigate token scope' : 'set GITHUB_TOKEN with repo read access',
+      });
+      return null;
+    }
+
+    if (!response.ok) {
+      logExtension('warn', 'Failed to fetch extension manifest via GitHub API', {
+        sourceType: 'github',
+        owner: gitSource.owner,
+        repo: gitSource.repo,
+        ref: gitSource.ref,
+        status: response.status,
+      });
+      return null;
+    }
+
+    const payload = await response.json() as GitHubContentsResponse;
+    if (payload.encoding !== 'base64' || typeof payload.content !== 'string') {
+      logExtension('warn', 'GitHub API payload missing base64 extension manifest content', {
+        sourceType: 'github',
+        owner: gitSource.owner,
+        repo: gitSource.repo,
+        ref: gitSource.ref,
+      });
+      return null;
+    }
+
+    const manifest = JSON.parse(Buffer.from(payload.content.replace(/\n/g, ''), 'base64').toString('utf8')) as ExtensionManifest;
+    validateExtensionManifest(manifest);
+
+    logExtension('info', 'Fetched extension manifest via GitHub API', {
+      sourceType: 'github',
+      owner: gitSource.owner,
+      repo: gitSource.repo,
+      ref: gitSource.ref,
+      latestVersion: manifest.version,
+    });
+
+    return manifest;
+  } catch (error) {
+    logExtension('warn', 'GitHub API manifest lookup failed', {
+      sourceType: 'github',
+      owner: gitSource.owner,
+      repo: gitSource.repo,
+      ref: gitSource.ref,
+      failureReason: (error as Error).message,
+    });
+    return null;
+  }
+}
+
 // Two-phase install: resolve (download/validate) then commit (copy to project).
 // This allows callers to inspect the manifest and check constraints before any files are written.
 
@@ -125,16 +526,23 @@ export interface ResolvedExtension {
 
 async function resolveFromLocal(sourcePath: string): Promise<ResolvedExtension> {
   const resolvedSource = path.resolve(sourcePath);
+  logExtension('debug', 'Resolving local extension source', { sourcePath, resolvedSource });
   const manifest = await loadExtensionManifest(resolvedSource);
   if (!manifest) {
     throw new Error(`Invalid extension: no valid extension.json found in ${resolvedSource}`);
   }
+  logExtension('info', 'Resolved local extension manifest', {
+    sourceType: 'local',
+    path: resolvedSource,
+    latestVersion: manifest.version,
+  });
   return { manifest, sourceDir: resolvedSource, cleanup: async () => {} };
 }
 
 async function resolveFromNpm(projectDir: string, packageName: string): Promise<ResolvedExtension> {
   const { execFileSync } = await import('child_process');
   const tmpDir = path.join(getExtensionsDir(projectDir), '.tmp-install');
+  logExtension('debug', 'Resolving npm extension source', { packageName, tmpDir });
   await removeDirectory(tmpDir);
   await ensureDir(tmpDir);
 
@@ -158,16 +566,47 @@ async function resolveFromNpm(projectDir: string, packageName: string): Promise<
     throw new Error(`Invalid extension: no valid extension.json in ${packageName}`);
   }
 
+  logExtension('info', 'Resolved npm extension manifest', {
+    sourceType: 'npm',
+    packageName,
+    latestVersion: manifest.version,
+  });
+
   return { manifest, sourceDir: packageDir, tempDir: tmpDir, cleanup: () => removeDirectory(tmpDir) };
 }
 
 async function resolveFromGit(projectDir: string, url: string): Promise<ResolvedExtension> {
   const { execFileSync } = await import('child_process');
   const tmpDir = path.join(getExtensionsDir(projectDir), '.tmp-clone');
+  const gitSource = parseGitSource(url);
+  const sourceType = classifyExtensionSource(url);
+  logExtension('debug', 'Resolving git extension source', {
+    sourceType,
+    url,
+    host: gitSource.host,
+    owner: gitSource.owner,
+    repo: gitSource.repo,
+    ref: gitSource.ref,
+    tmpDir,
+  });
   await removeDirectory(tmpDir);
 
-  const cleanUrl = url.replace(/^git\+/, '');
-  execFileSync('git', ['clone', '--depth', '1', cleanUrl, tmpDir], { stdio: 'pipe' });
+  const manifestFromApi = await fetchGitHubExtensionManifest(url);
+  if (!manifestFromApi && !gitSource.isGitHub) {
+    logExtension('debug', 'Using git clone fallback for non-GitHub extension metadata', {
+      sourceType,
+      host: gitSource.host,
+      ref: gitSource.ref,
+      url,
+    });
+  }
+
+  const cloneArgs = ['clone', '--depth', '1'];
+  if (gitSource.ref) {
+    cloneArgs.push('--branch', gitSource.ref, '--single-branch');
+  }
+  cloneArgs.push(gitSource.cloneUrl, tmpDir);
+  execFileSync('git', cloneArgs, { stdio: 'pipe' });
 
   const manifest = await loadExtensionManifest(tmpDir);
   if (!manifest) {
@@ -175,8 +614,19 @@ async function resolveFromGit(projectDir: string, url: string): Promise<Resolved
     throw new Error(`Invalid extension: no valid extension.json in ${url}`);
   }
 
+  logExtension('info', 'Resolved git extension manifest', {
+    sourceType,
+    host: gitSource.host,
+    owner: gitSource.owner,
+    repo: gitSource.repo,
+    ref: gitSource.ref,
+    latestVersion: manifest.version,
+    metadataSource: manifestFromApi ? 'github-api+clone' : 'clone',
+  });
+
   return { manifest, sourceDir: tmpDir, tempDir: tmpDir, cleanup: () => removeDirectory(tmpDir) };
 }
+
 
 export async function resolveExtension(projectDir: string, source: string): Promise<ResolvedExtension> {
   if (isLocalPath(source)) {
