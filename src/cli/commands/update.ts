@@ -57,42 +57,16 @@ function formatReason(reason: string): string {
   }
 }
 
-function groupEntriesByStatus<T extends { status: 'changed' | 'unchanged' | 'skipped' | 'removed' }>(
+function groupAndSortEntriesByStatus<T extends { status: 'changed' | 'unchanged' | 'skipped' | 'removed' }>(
   entries: T[],
+  sortKey: (entry: T) => string,
 ): Record<'changed' | 'unchanged' | 'skipped' | 'removed', T[]> {
+  const sort = (arr: T[]) => [...arr].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
   return {
-    changed: entries.filter(entry => entry.status === 'changed'),
-    unchanged: entries.filter(entry => entry.status === 'unchanged'),
-    skipped: entries.filter(entry => entry.status === 'skipped'),
-    removed: entries.filter(entry => entry.status === 'removed'),
-  };
-}
-
-function sortSkillEntries(entries: SkillUpdateEntry[]): SkillUpdateEntry[] {
-  return [...entries].sort((a, b) => a.skill.localeCompare(b.skill));
-}
-
-function sortSubagentEntries(entries: SubagentUpdateEntry[]): SubagentUpdateEntry[] {
-  return [...entries].sort((a, b) => a.subagent.localeCompare(b.subagent));
-}
-
-function groupSkillEntriesByStatus(entries: SkillUpdateEntry[]): Record<'changed' | 'unchanged' | 'skipped' | 'removed', SkillUpdateEntry[]> {
-  const grouped = groupEntriesByStatus(entries);
-  return {
-    changed: sortSkillEntries(grouped.changed),
-    unchanged: sortSkillEntries(grouped.unchanged),
-    skipped: sortSkillEntries(grouped.skipped),
-    removed: sortSkillEntries(grouped.removed),
-  };
-}
-
-function groupSubagentEntriesByStatus(entries: SubagentUpdateEntry[]): Record<'changed' | 'unchanged' | 'skipped' | 'removed', SubagentUpdateEntry[]> {
-  const grouped = groupEntriesByStatus(entries);
-  return {
-    changed: sortSubagentEntries(grouped.changed),
-    unchanged: sortSubagentEntries(grouped.unchanged),
-    skipped: sortSubagentEntries(grouped.skipped),
-    removed: sortSubagentEntries(grouped.removed),
+    changed: sort(entries.filter(entry => entry.status === 'changed')),
+    unchanged: sort(entries.filter(entry => entry.status === 'unchanged')),
+    skipped: sort(entries.filter(entry => entry.status === 'skipped')),
+    removed: sort(entries.filter(entry => entry.status === 'removed')),
   };
 }
 
@@ -355,7 +329,7 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
 
     for (const agent of config.agents) {
       const entries = skillEntriesByAgent.get(agent.id) ?? [];
-      const grouped = groupSkillEntriesByStatus(entries);
+      const grouped = groupAndSortEntriesByStatus(entries, e => e.skill);
       const changedWithContextWarnings: string[] = [];
 
       for (const entry of grouped.changed) {
@@ -413,7 +387,7 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
 
       const subagentEntries = subagentEntriesByAgent.get(agent.id) ?? [];
       if (agent.subagentsDir || subagentEntries.length > 0) {
-        const groupedSubagents = groupSubagentEntriesByStatus(subagentEntries);
+        const groupedSubagents = groupAndSortEntriesByStatus(subagentEntries, e => e.subagent);
 
         console.log(chalk.bold(`[${agent.id}] Subagents:`));
         console.log(chalk.dim(`  changed: ${groupedSubagents.changed.length}`));
