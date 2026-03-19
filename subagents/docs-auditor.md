@@ -3,7 +3,6 @@ name: docs-auditor
 description: Read-only background documentation drift sidecar for the current implementation scope. Use from implement-coordinator after code changes when deciding whether /aif-docs should run automatically.
 tools: Read, Glob, Grep
 model: sonnet
-disallowedTools: Write, Edit
 permissionMode: dontAsk
 background: true
 maxTurns: 6

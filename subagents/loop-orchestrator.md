@@ -4,7 +4,7 @@ description: Route reflex-loop execution to the next role based on run state, st
 tools: Read, Glob, Grep
 model: sonnet
 permissionMode: plan
-maxTurns: 3
+maxTurns: 5
 ---
 
 You are the loop supervisor router.

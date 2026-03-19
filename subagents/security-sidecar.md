@@ -3,7 +3,6 @@ name: security-sidecar
 description: Read-only background security audit sidecar for the current implementation scope. Use from implement-coordinator after code changes when a concise security check is needed.
 tools: Read, Glob, Grep
 model: inherit
-disallowedTools: Write, Edit
 permissionMode: dontAsk
 background: true
 maxTurns: 6
