@@ -391,6 +391,25 @@ Reviews staged changes or PR diffs:
 - Adds read-only context-gate findings (architecture/roadmap/rules) to review output
 - Uses `WARN` for non-blocking context drift and `ERROR` only for explicitly blocking review criteria
 
+### `/aif-reference <url|path> [url2|path2] [--name <ref-name>] [--update]`
+Creates knowledge references from external sources for AI agents:
+```
+/aif-reference https://zod.dev --name zod-validation
+/aif-reference https://docs.astro.build/en/getting-started/ https://docs.astro.build/en/guides/content-collections/
+/aif-reference ./docs/api-spec.yaml --name internal-api
+/aif-reference --update --name zod-validation
+/aif-reference list
+/aif-reference show zod-validation
+```
+- Fetches URLs (with automatic sub-page crawling, up to 8 pages per source), processes local files, or searches the web interactively
+- Synthesizes structured reference documents: overview, core concepts, API/interface, usage patterns, configuration, best practices, pitfalls
+- Saves to `.ai-factory/references/<name>.md` with source attribution and timestamps
+- Maintains an index in `.ai-factory/references/INDEX.md`
+- `--update` re-fetches sources and refreshes an existing reference
+- `list` / `show <name>` / `delete <name>` for managing existing references
+- References are available to all AI Factory skills — `/aif-plan`, `/aif-implement`, `/aif-grounded` can read them for domain context
+- Best when AI needs knowledge it wasn't trained on: new libraries, internal APIs, project-specific specs, or rapidly changing documentation
+
 ### `/aif-skill-generator`
 Generates new skills:
 ```

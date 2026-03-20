@@ -109,6 +109,9 @@ ai-factory upgrade
 # Execute the plan — implements tasks one by one, commits at checkpoints
 /aif-implement
 
+# Create a knowledge reference from docs AI doesn't know about
+/aif-reference https://docs.example.com/api-reference --name example-api
+
 # Fix a bug — AI learns from every fix and gets smarter over time
 /aif-fix TypeError: Cannot read property 'name' of undefined
 

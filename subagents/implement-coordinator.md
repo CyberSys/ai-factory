@@ -178,6 +178,17 @@ After parallel workers complete:
 - If 2 consecutive layers fail, stop the entire run and report.
 - Always verify the merged result before proceeding to the next layer.
 
+## Post-implementation rules check
+
+After ALL tasks are completed and verified (before final output):
+
+1. Check if `.ai-factory/RULES.md` exists.
+2. If it exists — read it and verify that the implemented code satisfies all rules.
+3. If any rule is violated — fix the violation before producing the final summary.
+4. If a fix requires changing files modified by multiple workers, run a verification pass after the fix.
+
+This is the last quality gate before the run is considered complete.
+
 ## Output
 
 After each layer, print a progress table:

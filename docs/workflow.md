@@ -165,6 +165,7 @@ If you want exploration results to survive `/clear` and feed directly into plann
 | `/aif-plan full --parallel` | Concurrent features via worktrees | Yes + worktree | Autonomous end-to-end |
 | `/aif-improve` | Refine plan before implementation | No | No (improves existing) |
 | `/aif-loop` | Iterative generation with quality gates and phase-based cycles | No | No (uses `.ai-factory/evolution/`) |
+| `/aif-reference` | Create knowledge refs from URLs/docs for AI agents | No | No (`.ai-factory/references/`) |
 | `/aif-fix` | Bug fixes, errors, hotfixes | No | Optional (`.ai-factory/FIX_PLAN.md`) |
 | `/aif-verify` | Post-implementation quality check | No | No (reads existing) |
 
@@ -180,6 +181,7 @@ Ownership is command-scoped to avoid conflicting writers:
 | `/aif-rules`                              | `.ai-factory/RULES.md`                                                                                   | append/update rules only                                |
 | `/aif-plan`                               | `.ai-factory/PLAN.md`, `.ai-factory/plans/<branch>.md`                                                   | `/aif-improve` refines existing plans                   |
 | `/aif-explore`                            | `.ai-factory/RESEARCH.md`                                                                                | all other artifacts are read-only in explore mode       |
+| `/aif-reference`                          | `.ai-factory/references/*`, `.ai-factory/references/INDEX.md`                                            | knowledge references from external sources              |
 | `/aif-fix`                                | `.ai-factory/FIX_PLAN.md`, `.ai-factory/patches/*.md`                                                    | bug-fix learning loop artifacts                         |
 | `/aif-evolve`                             | `.ai-factory/evolutions/*.md`, `.ai-factory/evolutions/patch-cursor.json`, `.ai-factory/skill-context/*` | skill-context overrides + evolution logs + cursor state |
 | `/aif-commit` `/aif-review` `/aif-verify` | read-only context by default                                                                             | gate and report, no default context-file writes         |
@@ -318,7 +320,7 @@ Reads patches incrementally using an evolve cursor, analyzes project patterns, a
 
 ---
 
-For full details on all skills including utility commands (`/aif-docs`, `/aif-dockerize`, `/aif-build-automation`, `/aif-ci`, `/aif-commit`, `/aif-skill-generator`, `/aif-security-checklist`), see [Core Skills](skills.md).
+For full details on all skills including utility commands (`/aif-docs`, `/aif-dockerize`, `/aif-build-automation`, `/aif-ci`, `/aif-commit`, `/aif-skill-generator`, `/aif-reference`, `/aif-security-checklist`), see [Core Skills](skills.md).
 
 ## Why Spec-Driven?
 

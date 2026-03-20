@@ -147,6 +147,7 @@ your-project/
 │   │   ├── aif-build-automation/
 │   │   ├── aif-verify/
 │   │   ├── aif-docs/
+│   │   ├── aif-reference/
 │   │   ├── aif-review/
 │   │   └── aif-skill-generator/
 │   └── settings.local.json    # Permissions config (gitignored)
@@ -158,6 +159,8 @@ your-project/
 │   ├── extensions/            # Installed extensions (from ai-factory extension add)
 │   │   └── <extension-name>/
 │   │       └── extension.json
+│   ├── references/            # Knowledge references from external sources (from /aif-reference)
+│   │   └── <topic>.md
 │   ├── plans/                 # Plans from /aif-plan full
 │   │   └── <branch-name>.md
 │   ├── skill-context/         # Project-specific rules for built-in skills (from /aif-evolve)
