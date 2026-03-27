@@ -3,7 +3,7 @@ name: commit-preparer
 description: Read-only background commit preparation sidecar for the current implementation scope. Use from implement-coordinator when deciding whether a final /aif-commit step can be streamlined.
 tools: Read, Glob, Grep
 model: sonnet
-permissionMode: dontAsk
+permissionMode: acceptEdits
 background: true
 maxTurns: 6
 skills:
