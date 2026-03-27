@@ -120,7 +120,7 @@ workflow:
   # Default: slug (derived from branch or task description)
   plan_id_format: slug
 
-  # Whether /aif-analyze updates ARCHITECTURE.md
+  # Whether the setup/analyze flow updates ARCHITECTURE.md
   # Default: true
   analyze_updates_architecture: true
 

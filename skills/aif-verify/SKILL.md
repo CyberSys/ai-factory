@@ -50,7 +50,7 @@ If config.yaml doesn't exist, use defaults:
   - normal vs strict context-gate thresholds.
 - If this contract conflicts with older examples in this file, follow the contract.
 
-### 0.1 Find Plan File
+### 0.2 Find Plan File
 
 Same logic as `/aif-implement`:
 

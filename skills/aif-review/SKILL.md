@@ -15,10 +15,12 @@ Perform thorough code reviews focusing on correctness, security, performance, an
 **FIRST:** Read `.ai-factory/config.yaml` if it exists to resolve:
 - **Paths:** `paths.description`, `paths.architecture`, `paths.rules_file`, `paths.roadmap`, and `paths.rules`
 - **Language:** `language.ui` for review summary language
+- **Git:** `git.base_branch` for branch comparison guidance
 
 If config.yaml doesn't exist, use defaults:
 - Paths: `.ai-factory/` for all artifacts
 - Language: `en` (English)
+- Git: `base_branch: main`
 
 ## Behavior
 

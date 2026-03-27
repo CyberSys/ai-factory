@@ -367,7 +367,7 @@ function fixedFunction(input) {
 
 ## Important Rules
 
-1. **Check FIX_PLAN.md first** - Always check the resolved fix plan path before anything else
+1. **Check the fix plan first** - Always check the resolved fix plan path before anything else
 2. **Plan mode = plan only** - When user chooses "Plan first", create the plan and STOP. Do NOT fix.
 3. **Execute mode = follow the plan** - When the resolved fix plan exists, follow it step by step, then delete it
 4. **NO reports** - Don't create summary documents (patches are learning artifacts, not reports)
@@ -405,7 +405,7 @@ function fixedFunction(input) {
 
 1. Create directory if it doesn't exist:
    ```bash
-   mkdir -p .ai-factory/patches
+   mkdir -p <resolved patches dir>
    ```
 
 2. Create a patch file with the current timestamp as filename.

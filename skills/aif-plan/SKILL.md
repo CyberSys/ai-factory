@@ -68,7 +68,7 @@ If any rule is violated — fix the output before presenting it to the user.
 - Use it to link this plan to a specific milestone (when applicable)
 - This reduces ambiguity in `/aif-implement` milestone completion and `/aif-verify` roadmap gates
 
-**OPTIONAL (recommended):** Read `.ai-factory/RESEARCH.md` if it exists:
+**OPTIONAL (recommended):** Read the resolved research path if it exists:
 - Treat `## Active Summary (input for /aif-plan)` as an additional requirements source
 - Carry over constraints/decisions into tasks and plan settings
 - Prefer the summary over raw notes; use `## Sessions` only when you need deeper rationale
@@ -111,9 +111,10 @@ full        → Full mode (first word)
 - Remaining text becomes the description
 - `--list` and `--cleanup` execute immediately and **STOP** (do NOT continue to Step 1+)
 - If `git.enabled = false`, reject `--parallel`, `--list`, and `--cleanup` with a short explanation instead of trying git commands
+- If `--parallel` is set while `git.create_branches = false`, reject it with a short explanation because parallel mode requires branch creation
 
 **If the description is empty:**
-- If `.ai-factory/RESEARCH.md` exists and its `Active Summary` has a non-empty `Topic:`, default the description to that topic (no extra user input required)
+- If the resolved research path exists and its `Active Summary` has a non-empty `Topic:`, default the description to that topic (no extra user input required)
 - Otherwise, ask the user for a short feature description
 
 **If `--list` is present**, jump to [--list Subcommand](#--list-subcommand).
@@ -132,7 +133,7 @@ Options:
 2. Fast – quick plan, no branch, saves to the resolved fast plan path
 ```
 
-If the user did not provide a description and `.ai-factory/RESEARCH.md` exists:
+If the user did not provide a description and the resolved research path exists:
 - Mention that you will default the description to the `Active Summary` topic
 - Only ask for `full` vs `fast` (no description prompt needed)
 
@@ -402,11 +403,11 @@ Use `TaskUpdate` to set `blockedBy` relationships:
 
 **Determine plan file path:**
 - **Fast mode** → the resolved `paths.plan`
-- **Full mode** → `<configured plans dir>/<branch-name>.md` (replace `/` with `-`)
+- **Full mode** → `<configured plans dir>/<branch-or-slug>.md`
 
 **Before saving, ensure directory exists:**
 ```bash
-mkdir -p <configured plans dir>  # only when saving to branch-named plan files
+mkdir -p <configured plans dir>
 ```
 
 **Plan file must include:**
@@ -414,7 +415,7 @@ mkdir -p <configured plans dir>  # only when saving to branch-named plan files
 - Branch and creation date
 - `Settings` section (Testing, Logging, Docs)
 - `Roadmap Linkage` section (optional, only if `.ai-factory/ROADMAP.md` exists)
-- `Research Context` section (optional, if `.ai-factory/RESEARCH.md` exists)
+- `Research Context` section (optional, if the resolved research path exists)
 - `Tasks` section grouped by phases
 - `Commit Plan` section when there are 5+ tasks
 
@@ -422,7 +423,7 @@ If `.ai-factory/ROADMAP.md` exists:
 - If the user linked a milestone, write `## Roadmap Linkage` with `Milestone: "..."` and `Rationale: ...`
 - If the user skipped linkage, write `## Roadmap Linkage` with `Milestone: "none"` and `Rationale: "Skipped by user"`
 
-If `.ai-factory/RESEARCH.md` exists:
+If the resolved research path exists:
 - Include `## Research Context` by copying only the `Active Summary` (do not paste full `Sessions`)
 - Keep it compact; it should be readable as a one-screen requirements snapshot
 
@@ -442,7 +443,7 @@ Use the canonical template in `references/TASK-FORMAT.md` (Plan File Template).
 /aif-implement
 
 CONTEXT FROM /aif-plan:
-- Plan file: .ai-factory/plans/<branch-name>.md
+- Plan file: <configured plans dir>/<branch-or-slug>.md
 - Testing: yes/no
 - Logging: verbose/standard/minimal
 - Docs: yes/no  # yes => mandatory docs checkpoint, no => warn-only
@@ -452,7 +453,7 @@ CONTEXT FROM /aif-plan:
 
 ```
 Plan created with [N] tasks.
-Plan file: .ai-factory/plans/<branch-name>.md
+Plan file: <configured plans dir>/<branch-or-slug>.md
 
 To start implementation, run:
 /aif-implement
@@ -549,7 +550,7 @@ Use canonical examples in `references/TASK-FORMAT.md`:
 5. **Dependencies matter** — Order tasks so they can be done sequentially
 6. **Include file paths** — Help implementer know where to work
 7. **Commit checkpoints for large plans** — 5+ tasks need commit plan with checkpoints every 3-5 tasks
-8. **Plan file location** – Fast mode: `paths.plan`. Full mode: `paths.plans/<branch-name>.md`
+8. **Plan file location** – Fast mode: `paths.plan`. Full mode: `paths.plans/<branch-or-slug>.md`
 9. **Ownership boundary** – This command owns plan files only (the resolved fast plan path and files under `paths.plans`). Use owner commands (`/aif-roadmap`, `/aif-rules`, `/aif-explore`) for their artifacts.
 10. **Roadmap linkage (when available)** — If `.ai-factory/ROADMAP.md` exists, include a `## Roadmap Linkage` section in the plan (or explicitly state it was skipped).
 

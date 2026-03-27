@@ -60,6 +60,8 @@ For detailed output format and examples, see:
 
 If the user is resuming **the next day**, says the session was **abandoned**, or you suspect context was lost (e.g. after `/clear`), rebuild local context from the repo **before** continuing tasks:
 
+If `git.enabled = true`:
+
 ```
 1. git status
 2. git branch --show-current
@@ -67,6 +69,8 @@ If the user is resuming **the next day**, says the session was **abandoned**, or
 4. (optional) git diff --stat
 5. (optional) git stash list
 ```
+
+If `git.enabled = false`, skip git recovery commands and reconcile only from the resolved plan/fix-plan paths plus the working tree state.
 
 Then reconcile plan/task state:
 - Ensure the current plan file matches the current branch when git branch plans are in use (`@plan-file` override wins; otherwise branch-named plan takes priority over the resolved fast plan).
@@ -507,7 +511,7 @@ If plan setting is `Docs: no` or setting is unset:
     ```
   - "No, keep it" → leave the file as is, continue to the next step
 
-- **If branch-named file** (e.g., `.ai-factory/plans/feature-user-auth.md`):
+- **If branch-named file** (e.g., `<configured plans dir>/feature-user-auth.md`):
   - Keep it - documents what was done
   - User can delete before merging if desired
 

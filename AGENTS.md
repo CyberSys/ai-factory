@@ -191,7 +191,8 @@ Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
 fast → no branch, saves to configured `paths.plan`
 full → creates richer plan, asks: tests? logging? docs?
        optionally creates git branch/worktree when `git.enabled=true` and `git.create_branches=true`
-       saves to `.ai-factory/plans/<branch-or-slug>.md`
+       saves to configured `paths.plans/<branch-or-slug>.md`
+       (`<slug>.md` when git is disabled or branch creation is off)
     ↓
 Explores codebase
     ↓
@@ -223,7 +224,7 @@ Reads .ai-factory/DESCRIPTION.md + ARCHITECTURE.md for context
     ↓
 Reads skill-context rules first; uses limited recent patch fallback when needed
     ↓
-Finds plan file (PLAN.md or branch-named)
+Finds plan file (branch-named, single named full plan, or fast plan)
     ↓
 Executes tasks one by one
     ↓
@@ -249,7 +250,7 @@ Implements fix WITH logging ([FIX] prefix)
     ↓
 Suggests test coverage for the bug
     ↓
-Creates self-improvement patch in .ai-factory/patches/
+Creates self-improvement patch in configured `paths.patches/`
     ↓
 NO plans, NO reports
 
@@ -265,7 +266,7 @@ Proposes targeted improvements → user approves
     ↓
 Applies improvements to skills
     ↓
-Saves evolution log to .ai-factory/evolutions/
+Saves evolution log to configured `paths.evolutions/`
 ```
 
 ## Skill Frontmatter Patterns

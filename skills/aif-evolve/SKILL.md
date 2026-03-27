@@ -514,7 +514,7 @@ For each approved improvement, determine the target:
 Create `<resolved evolutions dir>/YYYY-MM-DD-HH.mm.md`:
 
 ```bash
-mkdir -p .ai-factory/evolutions
+mkdir -p <resolved evolutions dir>
 ```
 
 After saving the evolution log, update cursor state:
