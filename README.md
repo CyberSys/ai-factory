@@ -54,14 +54,17 @@ mise use -g npm:ai-factory
 ## Quick Start
 
 ```bash
-# In your project directory
+# In your project directory (interactive wizard)
 ai-factory init
+
+# Or non-interactive with flags
+ai-factory init --agents claude,codex --mcp playwright,github
 ```
 
 This will:
-- Ask which AI agent you use
-- Install relevant skills
-- Configure MCP servers (for supported agents)
+- Ask which AI agent you use (or use `--agents` flag)
+- Install relevant skills (or use `--skills` flag)
+- Configure MCP servers (or use `--mcp` flag)
 
 Then open your AI agent and start working:
 
@@ -80,6 +83,23 @@ Or running without installation via `npx`:
 ```bash
 npx ai-factory init
 ```
+
+### Non-interactive mode
+
+Pass `--agents` to skip the interactive wizard:
+
+```bash
+# Agents + MCP servers
+ai-factory init --agents claude,cursor --mcp github,playwright
+
+# With specific skills
+ai-factory init --agents claude --skills commit,plan
+
+# Without base skills
+ai-factory init --agents codex --no-skills --mcp github
+```
+
+Available MCP servers: `github`, `postgres`, `filesystem`, `chrome-devtools`, `playwright`
 
 ### Upgrading from v1 to v2
 

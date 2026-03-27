@@ -162,3 +162,7 @@ export function getAgentChoices(): { name: string; value: string }[] {
     value: agent.id,
   }));
 }
+
+export function getAvailableAgentIds(): string[] {
+  return Object.keys(AGENT_REGISTRY);
+}

@@ -48,6 +48,7 @@ cd my-project
 
 # 3. Initialize — pick agents, install skills, configure MCP
 ai-factory init
+# Or non-interactively: ai-factory init --agents claude --mcp github,playwright
 
 # 4. Open your AI agent (Claude Code, Cursor, etc.) and run:
 /aif
@@ -64,8 +65,13 @@ If scope is unclear, start with `/aif-explore` (optionally save results to `.ai-
 ## CLI Commands
 
 ```bash
-# Initialize project
+# Initialize project (interactive wizard)
 ai-factory init
+
+# Initialize non-interactively with flags
+ai-factory init --agents claude,codex --mcp playwright,github
+ai-factory init --agents cursor --skills commit,plan
+ai-factory init --agents claude --no-skills --mcp github
 
 # Update skills to latest version (also checks for CLI updates)
 ai-factory update

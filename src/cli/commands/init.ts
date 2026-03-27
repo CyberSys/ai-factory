@@ -1,14 +1,80 @@
 import chalk from 'chalk';
 import path from 'path';
-import { runWizard } from '../wizard/prompts.js';
-import { buildManagedSkillsState, buildManagedSubagentsState, installSkills, installSubagents } from '../../core/installer.js';
+import { runWizard, type WizardAnswers } from '../wizard/prompts.js';
+import { buildManagedSkillsState, buildManagedSubagentsState, installSkills, installSubagents, getAvailableSkills } from '../../core/installer.js';
 import { saveConfig, configExists, loadConfig, getCurrentVersion, type AgentInstallation } from '../../core/config.js';
 import { configureMcp, getMcpInstructions } from '../../core/mcp.js';
-import { getAgentConfig } from '../../core/agents.js';
+import { getAgentConfig, getAvailableAgentIds } from '../../core/agents.js';
 import { cleanupAgentSetup, getAgentOnboarding } from '../../core/transformer.js';
 import { removeDirectory, removeFile } from '../../utils/fs.js';
 import { applyExtensionInjections } from '../../core/injections.js';
 import { collectReplacedSkills } from '../../core/extension-ops.js';
+
+export interface InitOptions {
+  agents?: string;
+  mcp?: string;
+  skills?: string | boolean;
+}
+
+const VALID_MCP_KEYS: Record<string, string> = {
+  github: 'mcpGithub',
+  postgres: 'mcpPostgres',
+  filesystem: 'mcpFilesystem',
+  'chrome-devtools': 'mcpChromeDevtools',
+  playwright: 'mcpPlaywright',
+};
+
+function buildAnswersFromFlags(options: InitOptions, availableSkills: string[]): WizardAnswers {
+  const availableAgentIds = getAvailableAgentIds();
+
+  // Parse agents
+  const agentIds = options.agents!.split(',').map(s => s.trim()).filter(Boolean);
+  const unknownAgents = agentIds.filter(id => !availableAgentIds.includes(id));
+  if (unknownAgents.length > 0) {
+    throw new Error(`Unknown agent(s): ${unknownAgents.join(', ')}. Available: ${availableAgentIds.join(', ')}`);
+  }
+  if (agentIds.length === 0) {
+    throw new Error(`At least one agent is required. Available: ${availableAgentIds.join(', ')}`);
+  }
+
+  // Parse MCP servers
+  const mcpKeys = options.mcp
+    ? options.mcp.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  const unknownMcp = mcpKeys.filter(k => !(k in VALID_MCP_KEYS));
+  if (unknownMcp.length > 0) {
+    throw new Error(`Unknown MCP server(s): ${unknownMcp.join(', ')}. Available: ${Object.keys(VALID_MCP_KEYS).join(', ')}`);
+  }
+
+  // Parse skills
+  let selectedSkills: string[];
+  if (options.skills === false) {
+    selectedSkills = [];
+  } else if (typeof options.skills === 'string' && options.skills !== 'all') {
+    const skillIds = options.skills.split(',').map(s => s.trim()).filter(Boolean);
+    const unknownSkills = skillIds.filter(s => !availableSkills.includes(s));
+    if (unknownSkills.length > 0) {
+      const available = availableSkills.length > 0 ? availableSkills.join(', ') : '(none found — run without --skills to use all)';
+      throw new Error(`Unknown skill(s): ${unknownSkills.join(', ')}. Available: ${available}`);
+    }
+    selectedSkills = skillIds;
+  } else {
+    selectedSkills = availableSkills;
+  }
+
+  // Build agent selections with MCP flags
+  const mcpSet = new Set(mcpKeys);
+  const agents = agentIds.map(id => ({
+    id,
+    mcpGithub: mcpSet.has('github'),
+    mcpFilesystem: mcpSet.has('filesystem'),
+    mcpPostgres: mcpSet.has('postgres'),
+    mcpChromeDevtools: mcpSet.has('chrome-devtools'),
+    mcpPlaywright: mcpSet.has('playwright'),
+  }));
+
+  return { selectedSkills, agents };
+}
 
 async function removeAgentSetup(projectDir: string, agent: AgentInstallation): Promise<void> {
   const agentConfig = getAgentConfig(agent.id);
@@ -27,8 +93,9 @@ async function removeAgentSetup(projectDir: string, agent: AgentInstallation): P
   await cleanupAgentSetup(agent.id, projectDir, agent.skillsDir);
 }
 
-export async function initCommand(): Promise<void> {
+export async function initCommand(options: InitOptions = {}): Promise<void> {
   const projectDir = process.cwd();
+  const nonInteractive = !!options.agents;
 
   console.log(chalk.bold.blue('\n🏭 AI Factory - Project Setup\n'));
 
@@ -42,7 +109,14 @@ export async function initCommand(): Promise<void> {
 
   try {
     const existingAgentIds = existingConfig?.agents.map(agent => agent.id) ?? [];
-    const answers = await runWizard(existingAgentIds);
+
+    let answers: WizardAnswers;
+    if (nonInteractive) {
+      const availableSkills = await getAvailableSkills();
+      answers = buildAnswersFromFlags(options, availableSkills);
+    } else {
+      answers = await runWizard(existingAgentIds);
+    }
 
     const selectedAgentIds = new Set(answers.agents.map(agent => agent.id));
     const removedAgents = (existingConfig?.agents ?? []).filter(agent => !selectedAgentIds.has(agent.id));
@@ -184,9 +258,14 @@ export async function initCommand(): Promise<void> {
     console.log('');
 
   } catch (error) {
-    if ((error as Error).message?.includes('User force closed')) {
+    const message = (error as Error).message ?? '';
+    if (message.includes('User force closed')) {
       console.log(chalk.yellow('\nSetup cancelled.'));
       return;
+    }
+    if (nonInteractive && (message.startsWith('Unknown ') || message.startsWith('At least one '))) {
+      console.error(chalk.red(`\nError: ${message}`));
+      process.exit(1);
     }
     throw error;
   }
