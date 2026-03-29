@@ -201,7 +201,7 @@ Options:
 ```
 
 If user selects (1) or (2):
-- Ensure `.ai-factory/` exists (`mkdir -p .ai-factory`)
+- Ensure the parent directory of the resolved research path exists (`mkdir -p "$(dirname "<resolved research path>")"`)
 - If the resolved research path does not exist, create it with this skeleton:
 
 ```markdown

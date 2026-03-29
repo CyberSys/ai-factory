@@ -15,10 +15,12 @@ Generate commit messages following the [Conventional Commits](https://www.conven
 **FIRST:** Read `.ai-factory/config.yaml` if it exists to resolve:
 - **Paths:** `paths.description`, `paths.architecture`, `paths.rules_file`, `paths.roadmap`, and `paths.rules`
 - **Language:** `language.ui` for prompts and commit message conventions
+- **Git preference:** `git.skip_push_after_commit` for post-commit push behavior
 
 If config.yaml doesn't exist, use defaults:
 - Paths: `.ai-factory/` for all artifacts
 - Language: `en` (English)
+- Git preference: `skip_push_after_commit: false`
 
 **Read `.ai-factory/skill-context/aif-commit/SKILL.md`** — MANDATORY if the file exists.
 
@@ -137,23 +139,27 @@ When invoked:
    - **Cancel** → stop, do NOT commit. End the workflow
 
 8. Execute `git commit` with the confirmed message
-9. After a successful commit, offer to push:
-   - Show branch/ahead status: `git status -sb`
-   - If the branch has no upstream, use: `git push -u origin <branch>`
-   - Otherwise: `git push`
+9. Post-commit push handling:
+   - If `git.skip_push_after_commit = true` in resolved config:
+     - Skip push prompt entirely
+     - End workflow after successful local commit
+   - Otherwise (default behavior), offer to push:
+     - Show branch/ahead status: `git status -sb`
+     - If the branch has no upstream, use: `git push -u origin <branch>`
+     - Otherwise: `git push`
 
-   ```
-   AskUserQuestion: Push to remote?
+     ```
+     AskUserQuestion: Push to remote?
 
-   Options:
-   1. Push now
-   2. Skip push
-   ```
+     Options:
+     1. Push now
+     2. Skip push
+     ```
 
-   - **Push now** → execute push command based on upstream status:
-     - if branch has no upstream → `git push -u origin <branch>`
-     - otherwise → `git push`
-   - **Skip push** → end the workflow
+     - **Push now** → execute push command based on upstream status:
+       - if branch has no upstream → `git push -u origin <branch>`
+       - otherwise → `git push`
+     - **Skip push** → end the workflow
 
 If argument provided (e.g., `/aif-commit auth`):
 - Use it as the scope

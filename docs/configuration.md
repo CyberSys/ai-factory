@@ -135,6 +135,7 @@ git:
   base_branch: main                # Diff / review / merge target when git is enabled
   create_branches: true            # Full plans may create branches when enabled
   branch_prefix: feature/          # Prefix for auto-created plan branches
+  skip_push_after_commit: false    # If true, /aif-commit skips push prompt after commit
 
 # Rules Configuration
 rules:
@@ -157,6 +158,7 @@ Current config-agnostic built-ins include `/aif-best-practices`, `/aif-build-aut
 - `git.enabled: false` disables branch/worktree assumptions entirely. `/aif-plan full` still creates a rich full plan, but it stores it in `paths.plans/<slug>.md` without running git commands.
 - `git.base_branch` is the branch used for diff, review, verify, and merge guidance. Skills must not hardcode `main`.
 - `git.create_branches: false` keeps git awareness enabled but disables automatic branch creation. This lets teams keep full plans without forcing branch-per-feature flow.
+- `git.skip_push_after_commit: true` makes `/aif-commit` stop after local commit without showing push prompt.
 - `paths.plan` remains the default fast-plan file. If you prefer fast plans inside `paths.plans/`, change `paths.plan` manually in `config.yaml`.
 - `paths.docs` controls where `/aif-docs` writes the detailed documentation pages. `README.md` remains the landing page in the project root.
 

@@ -211,6 +211,7 @@ git:
   base_branch: <detected-base-branch-or-main>
   create_branches: <true-or-false-based-on-user-choice>
   branch_prefix: feature/
+  skip_push_after_commit: false
 
 rules:
   base: .ai-factory/rules/base.md

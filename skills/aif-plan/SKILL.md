@@ -490,7 +490,7 @@ git worktree list
 ```
 
 For each worktree path:
-1. Check if `<worktree>/.ai-factory/plans/` contains any plan files
+1. Check whether the resolved plans directory exists under that worktree (`<worktree>/<resolved paths.plans>`, default: `<worktree>/.ai-factory/plans/`) and contains any plan files
 2. Show name and whether it looks complete (has tasks) or is still in progress
 
 **Output format:**
