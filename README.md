@@ -10,7 +10,7 @@
   </a>
 </p>
 
-![logo](https://github.com/lee-to/ai-factory/raw/2.x/art/aif1.jpg)
+![logo](https://github.com/ilhm344/ai-factory/blob/2.x/art/aif1.jpg)
 
 # AI Factory
 
@@ -177,7 +177,7 @@ AI Factory can generate and maintain your project docs with a single command:
 
 ---
 
-![happy](https://github.com/lee-to/ai-factory/raw/2.x/art/aif2.jpg)
+![happy](https://github.com/ilhm344/ai-factory/blob/2.x/art/aif2.jpg)
 
 ## Links
 
