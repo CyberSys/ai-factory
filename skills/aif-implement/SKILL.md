@@ -14,8 +14,12 @@ Execute tasks from the plan, track progress, and enable session continuation.
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo $HANDOFF_MODE`
-Handoff skip review: !`echo $HANDOFF_SKIP_REVIEW`
+Determine Handoff mode. If the caller passed `HANDOFF_MODE` and `HANDOFF_SKIP_REVIEW` as explicit text in the prompt, use those values. Otherwise, use the Bash tool:
+
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_SKIP_REVIEW || true
+```
 
 **Then check `HANDOFF_MODE`:**
 
@@ -28,15 +32,11 @@ The Handoff coordinator already manages status transitions and DB writes directl
 
 #### When `HANDOFF_MODE` is NOT `1` (manual Claude Code session)
 
-After reading the plan file (Step 1), extract the Handoff task ID from the `<!-- handoff:task:<id> -->` annotation on the first line (if present). If no annotation exists, skip all MCP sync — there is no linked Handoff task.
+Handoff sync is handled inline — see **Step 0.2** (after reading the plan file) for the task ID extraction and MCP sync trigger. The sync points are:
 
-If a task ID IS found in the plan annotation, sync with Handoff via MCP tools:
-
-- **On start:** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "implementing", sourceTimestamp: <now ISO>, direction: "aif_to_handoff", paused: true }`.
-- **On checklist update (Step 3.6):** After updating a checkbox in the plan file, call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full updated plan text> }` to keep the Kanban UI up-to-date.
-- **On completion (Step 5):** Call `handoff_push_plan` with the final plan content, then:
-    - If `HANDOFF_SKIP_REVIEW` is `1`: call `handoff_sync_status` with `{ newStatus: "done", ..., paused: false }`.
-    - Otherwise: call `handoff_sync_status` with `{ newStatus: "review", ..., paused: true }`.
+- **On start (Step 0.2):** `handoff_sync_status` → `"implementing"` (with `paused: true`)
+- **On checklist update (Step 3.6):** `handoff_push_plan` with updated plan content
+- **On completion (Step 5):** `handoff_push_plan` with final plan, then `handoff_sync_status` → `"review"` (with `paused: true`) or `"done"` (with `paused: false` when `HANDOFF_SKIP_REVIEW=1`)
 
 **CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`. This prevents the autonomous Handoff agent from picking up the task while you work manually. Only `done` passes `paused: false`.
 
@@ -303,6 +303,12 @@ Then continue with normal execution using the selected plan file.
 - Task dependencies
 - Task checklist format (`- [ ]` / `- [x]`) to keep progress synced
 
+**Immediately after reading the plan file, check the first line for `<!-- handoff:task:<uuid> -->`:**
+
+- If found AND `HANDOFF_MODE` is NOT `1` (manual session): extract the task ID. This is the Handoff task ID for MCP sync throughout this session. Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "implementing", sourceTimestamp: "<current UTC time in ISO 8601 format, e.g. 2026-04-02T18:30:45.000Z>", direction: "aif_to_handoff", paused: true }`. The timestamp must reflect the actual current time, not midnight or an approximation.
+- If found AND `HANDOFF_MODE` is `1`: the Handoff coordinator handles sync — do nothing.
+- If NOT found: no linked Handoff task — skip all MCP sync for the rest of this session.
+
 ### Step 1: Load Current State
 
 ```
@@ -383,6 +389,8 @@ TaskUpdate(taskId, status: "completed")
 - Even if deletion will be offered later
 - Plan file is the source of truth for progress
 
+**Handoff sync (manual mode ONLY — skip when `HANDOFF_MODE` is `1`):** If a Handoff task ID was extracted in Step 0.2, call `handoff_push_plan` with `{ taskId: <id>, planContent: <full updated plan text> }` to sync the checklist progress.
+
 **3.7: Update the resolved description artifact if needed**
 
 If during implementation:
@@ -462,6 +470,11 @@ To resume later, run:
 → Automatically finds next incomplete task
 
 ### Step 5: Completion
+
+**Handoff sync (manual mode ONLY — skip entirely when `HANDOFF_MODE` is `1`):** If a Handoff task ID was extracted from the plan annotation AND `HANDOFF_MODE` is NOT `1`:
+1. Call `handoff_push_plan` with `{ taskId: <id>, planContent: <final updated plan text> }`.
+2. If `HANDOFF_SKIP_REVIEW` is `1`: call `handoff_sync_status` with `{ taskId: <id>, newStatus: "done", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: false }`.
+3. Otherwise: call `handoff_sync_status` with `{ taskId: <id>, newStatus: "review", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 When all tasks are done:
 

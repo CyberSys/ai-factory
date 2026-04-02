@@ -17,8 +17,12 @@ Create an implementation plan for a feature or task. Two modes:
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo $HANDOFF_MODE`
-Handoff task ID: !`echo $HANDOFF_TASK_ID`
+Determine Handoff mode and task ID. If the caller passed `HANDOFF_MODE` and `HANDOFF_TASK_ID` as explicit text in the prompt, use those values. Otherwise, use the Bash tool to read the environment variables:
+
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_TASK_ID || true
+```
 
 **Then check `HANDOFF_MODE`:**
 
@@ -28,7 +32,7 @@ The Handoff coordinator already manages status transitions and DB writes directl
 
 - **No interactive questions:** Do not use `AskUserQuestion` — use sensible defaults (verbose logging, yes to tests, yes to docs, skip roadmap linkage).
 - **Mode default:** If mode is not specified, default to `fast`.
-- **Plan annotation:** If `HANDOFF_TASK_ID` is non-empty, insert `<!-- handoff:task:<HANDOFF_TASK_ID> -->` as the very first line of the plan file, before the title. This annotation links the plan to its Handoff task for bidirectional sync. **Omitting this annotation is a bug.**
+- **Plan annotation (MANDATORY):** If `HANDOFF_TASK_ID` is non-empty, you MUST insert `<!-- handoff:task:<HANDOFF_TASK_ID> -->` as the very first line of the plan file, before the title. This annotation links the plan to its Handoff task for bidirectional sync. **Omitting this annotation when HANDOFF_TASK_ID is set is a bug — verify before completing.**
 
 #### When `HANDOFF_MODE` is NOT `1` (manual Claude Code session)
 
@@ -36,8 +40,8 @@ If polishing an existing plan, extract the Handoff task ID from the `<!-- handof
 
 If a task ID IS found in the plan annotation, sync with Handoff via MCP tools:
 
-- **On start:** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "planning", sourceTimestamp: <now ISO>, direction: "aif_to_handoff", paused: true }`.
-- **On completion:** Call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full plan text> }`. Then call `handoff_sync_status` with `{ newStatus: "plan_ready", ..., paused: true }`.
+- **On start:** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "planning", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
+- **On completion:** Call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full plan text> }`. Then call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "plan_ready", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 **CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`. This prevents the autonomous Handoff agent from picking up the task while you work manually. Only `done` passes `paused: false`.
 

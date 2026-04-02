@@ -14,7 +14,13 @@ Fix a specific bug or problem in the codebase. Supports two modes: immediate fix
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo $HANDOFF_MODE`
+Determine Handoff mode, task ID, and skip-review flag. If the caller passed `HANDOFF_MODE`, `HANDOFF_TASK_ID`, and `HANDOFF_SKIP_REVIEW` as explicit text in the prompt, use those values. Otherwise, use the Bash tool:
+
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_TASK_ID || true
+Bash: printenv HANDOFF_SKIP_REVIEW || true
+```
 
 **Then check `HANDOFF_MODE`:**
 
@@ -22,18 +28,18 @@ Handoff mode: !`echo $HANDOFF_MODE`
 
 The Handoff coordinator already manages status transitions and DB writes directly. Do NOT call MCP tools. Instead:
 
-- **No interactive questions:** Do not use `AskUserQuestion` — default to "Fix now" mode. Always include tests and logging.
+- **No interactive questions:** Do not use `AskUserQuestion`. If `$ARGUMENTS` contains `--plan-first`, use "Plan first" mode. Otherwise default to "Fix now" mode. Always include tests and logging.
+- **Plan annotation (MANDATORY):** If `HANDOFF_TASK_ID` is non-empty, you MUST insert `<!-- handoff:task:<HANDOFF_TASK_ID> -->` as the very first line of the fix plan file, before the title. **Omitting this annotation when HANDOFF_TASK_ID is set is a bug — verify before completing.** This applies to both Step 1.1 (creating new plan) and any plan rewrite.
 
 #### When `HANDOFF_MODE` is NOT `1` (manual Claude Code session)
 
-After reading the fix plan file (Step 0.1), extract the Handoff task ID from the `<!-- handoff:task:<id> -->` annotation on the first line (if present). If no annotation exists, skip all MCP sync — there is no linked Handoff task.
+Handoff sync is handled inline — see **Step 0.1** (after reading the fix plan file) for the task ID extraction and MCP sync trigger. The sync points are:
 
-If a task ID IS found in the plan annotation, sync with Handoff via MCP tools:
+- **Plan first (Step 1.1):** `"planning"` → `"plan_ready"` (after save)
+- **Fix now (Step 2→5):** `"implementing"` (Step 2 entry) → `"done"` if `HANDOFF_SKIP_REVIEW=1`, else `"review"` (Step 5)
+- **Execute existing plan (Step 0.1→5):** `"implementing"` (Step 0.1) → `"done"` if `HANDOFF_SKIP_REVIEW=1`, else `"review"` (Step 5)
 
-- **On start:** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "planning", sourceTimestamp: <now ISO>, direction: "aif_to_handoff", paused: true }`.
-- **On completion:** Call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full fix plan or result> }`. Then call `handoff_sync_status` with `{ newStatus: "plan_ready", ..., paused: true }`.
-
-**CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`. This prevents the autonomous Handoff agent from picking up the task while you work manually. Only `done` passes `paused: false`.
+**CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`.
 
 When creating a new FIX_PLAN.md: if there is no existing annotation and no Handoff context, do not add the annotation.
 
@@ -62,6 +68,10 @@ If config.yaml doesn't exist, use defaults:
 **If the file EXISTS:**
 
 - Read the resolved fix plan file
+- **Immediately check the first line for `<!-- handoff:task:<uuid> -->`:**
+  - If found AND `HANDOFF_MODE` is NOT `1` (manual session): extract the task ID. Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "implementing", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`. (Status is `"implementing"` because we are executing an existing plan, not creating one.)
+  - If found AND `HANDOFF_MODE` is `1`: the Handoff coordinator handles sync — do nothing.
+  - If NOT found: no linked Handoff task — skip all MCP sync for the rest of this session.
 - Inform the user: "Found existing fix plan. Executing fix based on the plan."
 - Skip **Step 1** (problem intake/mode choice), but still run **Step 0.2** to load context
 - Then continue to **Step 2: Investigate the Codebase**, using the plan as your guide
@@ -157,6 +167,8 @@ Options:
 
 ### Step 1.1: Create Fix Plan
 
+**Handoff sync (manual mode only):** If a Handoff task ID is known (from `HANDOFF_TASK_ID` or an existing annotation) AND `HANDOFF_MODE` is NOT `1`, call `handoff_sync_status` with `{ taskId: <id>, newStatus: "planning", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
+
 Investigate the codebase enough to understand the problem and create a plan.
 
 **Use the same parallel exploration approach as Step 2** — launch Explore agents to investigate the problem area, related code, and past patterns simultaneously.
@@ -167,7 +179,11 @@ After agents return, synthesize findings to:
 2. Map affected files and functions
 3. Assess impact scope
 
-Then create the resolved fix plan file (default: `.ai-factory/FIX_PLAN.md`) with this structure:
+Then create the resolved fix plan file (default: `.ai-factory/FIX_PLAN.md`).
+
+**Before writing:** If `HANDOFF_MODE` is `1` and `HANDOFF_TASK_ID` is non-empty, the very first line of the file MUST be `<!-- handoff:task:<HANDOFF_TASK_ID> -->` followed by a blank line, then the plan content below. If in manual mode and a task ID was extracted from an existing annotation, preserve it.
+
+Structure:
 
 ```markdown
 # Fix Plan: [Brief title]
@@ -220,9 +236,13 @@ Review the plan and when you're ready to execute, run:
 /aif-fix
 ```
 
+**Handoff sync (manual mode only):** If a Handoff task ID is known AND `HANDOFF_MODE` is NOT `1`, call `handoff_push_plan` with `{ taskId: <id>, planContent: <full fix plan text> }`, then `handoff_sync_status` with `{ taskId: <id>, newStatus: "plan_ready", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
+
 **STOP here. Do NOT apply the fix.**
 
 ### Step 2: Investigate the Codebase
+
+**Handoff sync (manual mode, "Fix now" path only):** If a Handoff task ID is known AND `HANDOFF_MODE` is NOT `1`, call `handoff_sync_status` with `{ taskId: <id>, newStatus: "implementing", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 **Use `Task` tool with `subagent_type: Explore` to investigate the problem in parallel.** This keeps the main context clean and allows simultaneous investigation of multiple angles.
 
@@ -298,6 +318,11 @@ try {
 - Ensure no regressions introduced
 
 ### Step 5: Suggest Test Coverage
+
+**Handoff sync (manual mode ONLY — skip entirely when `HANDOFF_MODE` is `1`):** If a Handoff task ID is known AND `HANDOFF_MODE` is NOT `1`:
+1. Call `handoff_push_plan` with `{ taskId: <id>, planContent: <fix summary or updated plan> }`.
+2. If `HANDOFF_SKIP_REVIEW` is `1`: call `handoff_sync_status` with `{ taskId: <id>, newStatus: "done", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: false }`.
+3. Otherwise: call `handoff_sync_status` with `{ taskId: <id>, newStatus: "review", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 **ALWAYS suggest covering this case with a test:**
 

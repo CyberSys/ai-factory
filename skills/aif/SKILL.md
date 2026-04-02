@@ -578,7 +578,7 @@ Install skills, configure MCP, generate `AGENTS.md`, and generate architecture d
 1. **Search before generating** — Don't reinvent existing skills
 2. **Ask confirmation** — Before installing or generating
 3. **Check duplicates** — Don't install what's already there
-4. **MCP in .mcp.json** — Project-level (agent reads MCP from `.mcp.json`, not `settings.local.json`)
+4. **MCP in `{{settings_file}}`** — Project-level MCP configuration
 5. **Remind about env vars** — For MCP that need credentials
 
 ## Artifact Ownership

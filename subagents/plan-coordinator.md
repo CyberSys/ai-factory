@@ -18,9 +18,19 @@ CRITICAL: This agent MUST run as a top-level custom agent session via `claude --
 
 ## Handoff Integration
 
-Check environment: `echo $HANDOFF_MODE`
+Check environment using the Bash tool:
 
-Always pass `HANDOFF_MODE` env var through to all plan-polisher invocations.
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_TASK_ID || true
+```
+
+**If `HANDOFF_MODE` is `1`:** pass BOTH `HANDOFF_MODE` and `HANDOFF_TASK_ID` values as explicit text in every plan-polisher prompt. Do NOT rely on the polisher reading env vars itself — include the values directly:
+
+```
+HANDOFF_MODE: 1
+HANDOFF_TASK_ID: <value from printenv>
+```
 
 **When `HANDOFF_MODE` is `1`** (autonomous Handoff agent):
 
@@ -32,8 +42,8 @@ After reading an existing plan file (if polishing), extract the Handoff task ID 
 
 If a task ID IS found in the plan annotation, sync with Handoff via MCP tools:
 
-- **On start (before first plan-polisher):** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "planning", sourceTimestamp: <now ISO>, direction: "aif_to_handoff", paused: true }`.
-- **On completion (after final iteration):** Read the final plan file, then call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full plan text> }`. Then call `handoff_sync_status` with `{ newStatus: "plan_ready", ..., paused: true }`.
+- **On start (before first plan-polisher):** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "planning", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
+- **On completion (after final iteration):** Read the final plan file, then call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full plan text> }`. Then call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "plan_ready", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 **CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`. This prevents the autonomous Handoff agent from picking up the task while you work manually. Only `done` passes `paused: false`.
 
@@ -89,6 +99,7 @@ report summary
   - `mode: fast` or `mode: full` (from user config or default)
   - `tests: yes/no/infer` (from user config or default `infer`)
   - `docs: yes/no/infer` (from user config or default `infer`)
+  - `HANDOFF_MODE` and `HANDOFF_TASK_ID` values (only when `HANDOFF_MODE=1`)
 - Do NOT pass raw plan content — let plan-polisher read the file itself.
 - On the first dispatch, always include the mode explicitly so plan-polisher uses the correct file location.
 

@@ -28,9 +28,14 @@ CRITICAL: This agent MUST run as a top-level custom agent session via `claude --
 
 ## Handoff Integration
 
-Check environment: `echo $HANDOFF_MODE`, `echo $HANDOFF_SKIP_REVIEW`
+Determine Handoff mode. If the caller passed `HANDOFF_MODE` and `HANDOFF_SKIP_REVIEW` as explicit text in the prompt, use those values. Otherwise, use the Bash tool:
 
-Pass `HANDOFF_MODE` and `HANDOFF_SKIP_REVIEW` env vars through to `implement-worker` invocations (workers never call MCP directly).
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_SKIP_REVIEW || true
+```
+
+**If `HANDOFF_MODE` is `1`:** pass `HANDOFF_MODE` and `HANDOFF_SKIP_REVIEW` values as explicit text in every `implement-worker` prompt (workers never call MCP directly).
 
 **When `HANDOFF_MODE` is `1`** (autonomous Handoff agent):
 
@@ -42,11 +47,11 @@ After reading the plan file, extract the Handoff task ID from the `<!-- handoff:
 
 If a task ID IS found in the plan annotation, sync with Handoff via MCP tools:
 
-- **On start (before first task dispatch):** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "implementing", sourceTimestamp: <now ISO>, direction: "aif_to_handoff", paused: true }`.
+- **On start (before first task dispatch):** Call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "implementing", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 - **After each layer completes:** Read the updated plan file and call `handoff_push_plan` with `{ taskId: <extracted-id>, planContent: <full plan text> }` to sync checklist progress.
 - **On completion (all tasks done):** Call `handoff_push_plan` with the final plan, then:
-    - If `HANDOFF_SKIP_REVIEW` is `1`: call `handoff_sync_status` with `{ newStatus: "done", ..., paused: false }`.
-    - Otherwise: call `handoff_sync_status` with `{ newStatus: "review", ..., paused: true }`.
+    - If `HANDOFF_SKIP_REVIEW` is `1`: call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "done", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: false }`.
+    - Otherwise: call `handoff_sync_status` with `{ taskId: <extracted-id>, newStatus: "review", sourceTimestamp: "<current UTC time in ISO 8601 format>", direction: "aif_to_handoff", paused: true }`.
 
 **CRITICAL:** Always pass `paused: true` with every `handoff_sync_status` call except `done`. This prevents the autonomous Handoff agent from picking up the task while you work manually. Only `done` passes `paused: false`.
 

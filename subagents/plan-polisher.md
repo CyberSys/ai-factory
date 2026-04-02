@@ -26,11 +26,23 @@ Repo-specific rules:
 
 ## Handoff Integration
 
-Check environment: `echo $HANDOFF_MODE` and `echo $HANDOFF_TASK_ID`
+Determine Handoff mode and task ID. The caller (plan-coordinator) passes these as explicit text in the prompt:
+
+```
+HANDOFF_MODE: <value>
+HANDOFF_TASK_ID: <value>
+```
+
+If the caller did NOT pass them, fall back to reading environment using the Bash tool:
+
+```
+Bash: printenv HANDOFF_MODE || true
+Bash: printenv HANDOFF_TASK_ID || true
+```
 
 **When `HANDOFF_MODE` is `1`** (autonomous Handoff agent):
 - **No interactive prompts:** Use defaults — do not attempt to ask the user questions.
-- **Plan annotation:** If `HANDOFF_TASK_ID` is non-empty, insert `<!-- handoff:task:<HANDOFF_TASK_ID> -->` as the very first line of the plan file, before the title. This annotation links the plan to its Handoff task for bidirectional sync.
+- **Plan annotation (MANDATORY):** If `HANDOFF_TASK_ID` is non-empty, you MUST insert `<!-- handoff:task:<HANDOFF_TASK_ID> -->` as the very first line of the plan file, before the title. This annotation links the plan to its Handoff task for bidirectional sync. **Omitting this annotation when HANDOFF_TASK_ID is set is a bug.**
 
 **When `HANDOFF_MODE` is NOT `1`** (manual session):
 - If polishing an existing plan that already has a `<!-- handoff:task:<id> -->` annotation, preserve it on the first line when rewriting the file.
