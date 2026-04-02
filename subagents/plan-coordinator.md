@@ -18,7 +18,7 @@ CRITICAL: This agent MUST run as a top-level custom agent session via `claude --
 
 ## Handoff Integration
 
-Check environment: `echo ${HANDOFF_MODE:-}`
+Check environment: `echo $HANDOFF_MODE`
 
 Always pass `HANDOFF_MODE` env var through to all plan-polisher invocations.
 

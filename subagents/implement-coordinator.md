@@ -28,7 +28,7 @@ CRITICAL: This agent MUST run as a top-level custom agent session via `claude --
 
 ## Handoff Integration
 
-Check environment: `echo ${HANDOFF_MODE:-}`, `echo ${HANDOFF_SKIP_REVIEW:-}`
+Check environment: `echo $HANDOFF_MODE`, `echo $HANDOFF_SKIP_REVIEW`
 
 Pass `HANDOFF_MODE` and `HANDOFF_SKIP_REVIEW` env vars through to `implement-worker` invocations (workers never call MCP directly).
 

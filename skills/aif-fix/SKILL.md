@@ -14,7 +14,7 @@ Fix a specific bug or problem in the codebase. Supports two modes: immediate fix
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo ${HANDOFF_MODE:-}`
+Handoff mode: !`echo $HANDOFF_MODE`
 
 **Then check `HANDOFF_MODE`:**
 

@@ -14,8 +14,8 @@ Execute tasks from the plan, track progress, and enable session continuation.
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo ${HANDOFF_MODE:-}`
-Handoff skip review: !`echo ${HANDOFF_SKIP_REVIEW:-}`
+Handoff mode: !`echo $HANDOFF_MODE`
+Handoff skip review: !`echo $HANDOFF_SKIP_REVIEW`
 
 **Then check `HANDOFF_MODE`:**
 

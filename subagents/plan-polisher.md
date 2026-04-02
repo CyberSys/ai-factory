@@ -26,7 +26,7 @@ Repo-specific rules:
 
 ## Handoff Integration
 
-Check environment: `echo ${HANDOFF_MODE:-}` and `echo ${HANDOFF_TASK_ID:-}`
+Check environment: `echo $HANDOFF_MODE` and `echo $HANDOFF_TASK_ID`
 
 **When `HANDOFF_MODE` is `1`** (autonomous Handoff agent):
 - **No interactive prompts:** Use defaults — do not attempt to ask the user questions.

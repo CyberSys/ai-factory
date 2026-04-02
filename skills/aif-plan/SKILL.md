@@ -17,8 +17,8 @@ Create an implementation plan for a feature or task. Two modes:
 
 ### Step 0 (pre): Detect Handoff Mode
 
-Handoff mode: !`echo ${HANDOFF_MODE:-}`
-Handoff task ID: !`echo ${HANDOFF_TASK_ID:-}`
+Handoff mode: !`echo $HANDOFF_MODE`
+Handoff task ID: !`echo $HANDOFF_TASK_ID`
 
 **Then check `HANDOFF_MODE`:**
 
